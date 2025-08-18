@@ -53,9 +53,14 @@ LTDL_INIT
 
 # Checks for libraries.
 PKG_CHECK_MODULES([GUILE], [guile-3.0])
-GUILE_PKG([3.0])
-GUILE_FLAGS
-GUILE_SITE_DIR
+
+#--
+# The following are commented out because they seem to no longer be
+# defined. It seems they are no longer needed.
+#
+#    GUILE_PKG([3.0])
+#    GUILE_FLAGS
+#    GUILE_SITE_DIR
 
 #--
 # The following are commented out because they should not be needed.
