@@ -53,6 +53,8 @@ LTDL_INIT
 
 # Checks for libraries.
 PKG_CHECK_MODULES([GUILE], [guile-3.0])
+AC_MSG_NOTICE([GUILE_LIBS: $GUILE_LIBS])
+AC_MSG_NOTICE([GUILE_LTLIBS: $GUILE_LTLIBS])
 
 #--
 # The following are commented out because they seem to no longer be
