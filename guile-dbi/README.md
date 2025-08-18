@@ -2,7 +2,7 @@
 Guile-DBI
 =========
 guile-dbi provides a simple, generic, easy-to-use scheme/guile interface
-to SQL databases, such as Postgres or MySQL.
+to SQL databases, such as Postgres, MySQL or SQLite3.
 
 The system is split into two parts: the DBI (database independent) part,
 which provides the scheme interfaces, and the DBD (database dependent)
