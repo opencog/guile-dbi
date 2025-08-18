@@ -50,11 +50,11 @@ drivers.  You have to build each independently.  You will need to do
 something like this:
 
 ```
-apt-get install autoconf automake texinfo
+apt-get install autoconf automake texinfo gettext
 ```
 or maybe
 ```
-yum install autoconf automake texinfo
+yum install autoconf automake texinfo gettext
 ```
 Some users might also need to install `autoconf-archive`.
 
