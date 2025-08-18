@@ -3,16 +3,16 @@
 PACKAGE=guile-dbi
 
 # dnl     4a) Increment when removing or changing interfaces.
-DBI_MAJOR_VERSION=2
+DBI_MAJOR_VERSION=3
 
 # dnl     4a) 5) Increment when adding interfaces.
 # dnl     6) Set to zero when removing or changing interfaces.
-DBI_MINOR_VERSION=1
+DBI_MINOR_VERSION=0
 
 # dnl     3) Increment when interfaces not changed at all,
 # dnl               only bug fixes or internal changes made.
 # dnl     4b) Set to zero when adding, removing or changing interfaces.
-DBI_MICRO_VERSION=9
+DBI_MICRO_VERSION=0
 
 DBI_EFFECTIVE_VERSION=${DBI_MAJOR_VERSION}.${DBI_MINOR_VERSION}
 DBI_VERSION=${DBI_EFFECTIVE_VERSION}.${DBI_MICRO_VERSION}
