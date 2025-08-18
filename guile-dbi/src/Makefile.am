@@ -25,7 +25,7 @@ AUTOMAKE_OPTIONS = gnu
 SUBDIRS = dbi test
 AM_CPPFLAGS = -I$(top_srcdir)/include -I/usr/include
 AM_CFLAGS = $(GUILE_CFLAGS)
-LDADD = $(GUILE_LIBS)
+# LDADD = $(GUILE_LIBS) $(LIBLTDL)
 
 BUILT_SOURCES = guile-dbi.x
 
@@ -37,7 +37,7 @@ SUFFIXES = .x
 lib_LTLIBRARIES = libguile-dbi.la
 
 libguile_dbi_la_SOURCES = guile-dbi.c guile-dbi.x
-libguile_dbi_la_LIBADD = $(GUILE_LTLIBS)
+libguile_dbi_la_LIBADD = $(GUILE_LIBS) $(LIBLTDL)
 libguile_dbi_la_LDFLAGS = -export-dynamic -version-info @DBI_INTERFACE@
 libguile_dbi_la_DEPENDENCIES = $(LTLIBOBJS)
 
