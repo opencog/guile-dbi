@@ -27,6 +27,10 @@ generic FFI interfaces, so that there would not be any need at all for
 any C code. However, that takes more work, and the code here works OK,
 so, for now, things seem OK.
 
+Status
+------
+* '''Version 3.0.0''' -- stable, reliable, "feature complee".
+
 Documentation
 -------------
 The guile-dbi user-manual and reference is
