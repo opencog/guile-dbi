@@ -22,7 +22,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([guile-dbi],[2.1.9],[bug-guile@gnu.org])
+AC_INIT([guile-dbi],[3.1.1],[bug-guile@gnu.org])
 AM_INIT_AUTOMAKE
 AM_MAINTAINER_MODE
 AC_CONFIG_SRCDIR([config.h.in])
@@ -56,27 +56,10 @@ PKG_CHECK_MODULES([GUILE], [guile-3.0])
 AC_MSG_NOTICE([GUILE_LIBS: $GUILE_LIBS])
 AC_MSG_NOTICE([GUILE_LTLIBS: $GUILE_LTLIBS])
 
-#--
-# The following are commented out because they seem to no longer be
-# defined. It seems they are no longer needed.
-#
-#    GUILE_PKG([3.0])
-#    GUILE_FLAGS
-#    GUILE_SITE_DIR
-
-#--
-# The following are commented out because they should not be needed.
-# They are left here as a hack of last resort. If things are not working
-# as expected, be sure to try setting the ACLOCAL_PATH first! Like so:
-#
-#    ACLOCAL_PATH=/usr/local/share/aclocal/ ./autogen.sh --no-configure
-#
-# If that doesn't fix things, then maybe uncommenting the lines below
-# will solve something. Maybe. Maybe not.
-#
-# CFLAGS="${CFLAGS} ${LTDLINCL} `$GUILE_CONFIG compile`"
-# LIBS="$LIBLTDL `$GUILE_CONFIG link`"
-# GUILE_SITE=`$GUILE_CONFIG info sitedir`
+# Get the Guile site directory for installing .scm files
+GUILE_SITE=`$PKG_CONFIG --variable=sitedir guile-3.0`
+AC_SUBST([GUILE_SITE])
+AC_MSG_NOTICE([GUILE_SITE: $GUILE_SITE])
 
 # Check for makeinfo; avoid ugliness if not installed.
 AC_CHECK_PROG(have_makeinfo,makeinfo,yes,no)
@@ -113,3 +96,12 @@ AC_CONFIG_FILES([src/test/check-guile-dbi],
                 [chmod ugo+x src/test/check-guile-dbi])
 
 AC_OUTPUT
+dnl ====================================================================
+echo "
+$PACKAGE-$VERSION
+
+   prefix:      ${prefix}
+   compiler:    ${CC} ${CPPFLAGS} ${CFLAGS}
+   link:        ${LIBS}
+   site:        ${GUILE_SITE}
+"
