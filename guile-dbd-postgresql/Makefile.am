@@ -25,4 +25,10 @@ ACLOCAL_AMFLAGS = -I m4
 AUTOMAKE_OPTIONS = gnu
 SUBDIRS = src
 
-EXTRA_DIST= autogen.sh
+EXTRA_DIST= autogen.sh \
+	test/test-guile-dbd-postgresql.scm
+
+# Hmm Can't run the unit test, because it needs to have postgres
+# configured, and I can't assume that by default.
+#check-local:
+#	guile -s $(srcdir)/test/test-guile-dbd-postgresql.scm
