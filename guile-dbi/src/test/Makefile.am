@@ -35,7 +35,7 @@ libguile_dbd_test_la_LIBADD = -ldl $(GUILE_LTLIBS)
 libguile_dbd_test_la_LDFLAGS = -export-dynamic
 libguile_dbd_test_la_DEPENDENCIES = $(LTLIBOBJS)
 
-EXTRA_DIST=test-guile-dbi.scm check-guile-dbi.in grg/begin.grg grg/dbd-test.scm
+EXTRA_DIST=test-guile-dbi.scm
 
 # test section
 # Set library path so guile can find libguile-dbi and libguile-dbd-test
