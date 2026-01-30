@@ -42,3 +42,6 @@ libguile_dbi_la_LDFLAGS = -export-dynamic -version-info @DBI_INTERFACE@
 libguile_dbi_la_DEPENDENCIES = $(LTLIBOBJS)
 
 CLEANFILES = *.x
+
+install-exec-hook:
+	-ldconfig
