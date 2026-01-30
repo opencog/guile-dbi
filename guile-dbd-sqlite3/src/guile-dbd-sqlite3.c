@@ -257,15 +257,30 @@ SCM __sqlite3_getrow_g_db_handle (gdbi_db_handle_t *dbh)
   if (NULL == dbh || NULL == sqliteP)
   {
     dbh->status = status_cons (1, "invalid dbi connection");
-    row = SCM_BOOL_F;
-    goto cleanup;
+    return SCM_BOOL_F;
   }
 
   if (NULL == sqliteP->stmt)
   {
     dbh->status = status_cons (1, "missing query result");
-    row = SCM_BOOL_F;
-    goto cleanup;
+    return SCM_BOOL_F;
+  }
+
+  // Step to the next row (once, not per-column)
+  int rc = sqlite3_step (sqliteP->stmt);
+  if (SQLITE_DONE == rc)
+  {
+    dbh->status = status_cons (0, "no more rows");
+    sqlite3_finalize (sqliteP->stmt);
+    sqliteP->stmt = NULL;
+    return SCM_BOOL_F;
+  }
+  if (SQLITE_ROW != rc)
+  {
+    dbh->status = status_cons (1, sqlite3_errmsg (db));
+    sqlite3_finalize (sqliteP->stmt);
+    sqliteP->stmt = NULL;
+    return SCM_BOOL_F;
   }
 
   int ncols = sqlite3_column_count (sqliteP->stmt);
@@ -273,13 +288,10 @@ SCM __sqlite3_getrow_g_db_handle (gdbi_db_handle_t *dbh)
   // Build the row in reverse so we can prepend efficiently
   for (int c = ncols - 1; c >= 0; c--)
   {
-    int rc = sqlite3_step (sqliteP->stmt);
     SCM value;
     int col_type = sqlite3_column_type (sqliteP->stmt, c);
 
-    if (SQLITE_ROW == rc)
-    {
-      switch (col_type)
+    switch (col_type)
       {
       case SQLITE_INTEGER:
         value = scm_from_long_long (sqlite3_column_int64 (sqliteP->stmt, c));
@@ -315,25 +327,9 @@ SCM __sqlite3_getrow_g_db_handle (gdbi_db_handle_t *dbh)
       const char *col_name = sqlite3_column_name (sqliteP->stmt, c);
       SCM pair = scm_cons (scm_from_locale_string (col_name), value);
 
-      row = scm_cons (pair, row);
-    }
-    else if (SQLITE_DONE == rc)
-    {
-      // No more rows
-      break;
-    }
-    else
-    {
-      dbh->status = status_cons (1, sqlite3_errmsg (db));
-      goto cleanup;
-    }
+    row = scm_cons (pair, row);
   }
 
   dbh->status = status_cons (0, "row fetched");
-
-cleanup:
-  sqlite3_finalize (sqliteP->stmt);
-  sqliteP->stmt = NULL;
-
   return row;
 }
