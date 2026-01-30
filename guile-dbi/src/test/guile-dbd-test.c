@@ -52,14 +52,14 @@ __test_make_g_db_handle(gdbi_db_handle_t* dbh)
     {
       dbh->status = (SCM) scm_cons(scm_from_int(1),
 				   scm_from_locale_string("missing connection string"));
-      dbh->closed = SCM_BOOL_F;
+      dbh->closed = SCM_BOOL_T;
       return;
     }
   else
     {
       dbh->status = (SCM) scm_cons(scm_from_int(0),
 				   scm_from_locale_string("test connect ok"));
-      dbh->closed = SCM_BOOL_T;
+      dbh->closed = SCM_BOOL_F;
     }
   return;
 }
@@ -81,6 +81,12 @@ __test_close_g_db_handle(gdbi_db_handle_t* dbh)
 void
 __test_query_g_db_handle(gdbi_db_handle_t* dbh, char* query)
 {
+  if (dbh->closed == SCM_BOOL_T)
+    {
+      dbh->status = (SCM) scm_cons(scm_from_int(1),
+				   scm_from_locale_string("connection closed"));
+      return;
+    }
   dbh->status = (SCM) scm_cons(scm_from_int(0),
 			       scm_from_locale_string("test query ok"));
   return;
@@ -91,5 +97,13 @@ __test_query_g_db_handle(gdbi_db_handle_t* dbh, char* query)
 SCM
 __test_getrow_g_db_handle(gdbi_db_handle_t* dbh)
 {
+  if (dbh->closed == SCM_BOOL_T)
+    {
+      dbh->status = (SCM) scm_cons(scm_from_int(1),
+				   scm_from_locale_string("connection closed"));
+      return SCM_BOOL_F;
+    }
+  dbh->status = (SCM) scm_cons(scm_from_int(0),
+			       scm_from_locale_string("row retrieved"));
   return (SCM_BOOL_F);
 }

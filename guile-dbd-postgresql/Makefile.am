@@ -25,4 +25,8 @@ ACLOCAL_AMFLAGS = -I m4
 AUTOMAKE_OPTIONS = gnu
 SUBDIRS = src
 
-EXTRA_DIST= autogen.sh
+EXTRA_DIST= autogen.sh \
+	test/test-guile-dbd-postgresql.scm
+
+check-local:
+	guile -s $(srcdir)/test/test-guile-dbd-postgresql.scm

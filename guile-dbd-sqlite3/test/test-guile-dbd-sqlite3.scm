@@ -9,7 +9,11 @@
   (if (equal? result expected) (begin (display " PASSED") (newline))
     (begin (display " FAILED: ") (display (list "equal?" result expected)) (newline))))
 
-(define db-path (tmpnam))
+(define db-path
+  (let* ((template (string-copy "/tmp/guile-dbi-test-XXXXXX"))
+         (port (mkstemp! template)))
+    (close-port port)
+    template))
 (define db-obj (dbi-open "sqlite3" db-path))
 
 (check "create table"
