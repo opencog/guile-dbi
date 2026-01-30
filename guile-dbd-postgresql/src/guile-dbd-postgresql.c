@@ -68,14 +68,13 @@ void __postgresql_make_g_db_handle (gdbi_db_handle_t *dbh)
     char *user, *pass, *db, *ctyp, *loc;
 
     pgsqlP = (gdbi_pgsql_ds_t *)malloc (sizeof (gdbi_pgsql_ds_t));
-    pgsqlP->retn = 0;
-
     if (pgsqlP == NULL)
     {
       dbh->status = scm_cons (scm_from_int (errno),
                               scm_from_locale_string (strerror (errno)));
       return;
     }
+    pgsqlP->retn = 0;
 
     user = scm_to_locale_string (scm_list_ref (cp_list, scm_from_int (0)));
     pass = scm_to_locale_string (scm_list_ref (cp_list, scm_from_int (1)));
@@ -306,6 +305,11 @@ SCM __postgresql_getrow_g_db_handle (gdbi_db_handle_t *dbh)
     pgsqlP->lget = 0;
     PQclear (pgsqlP->res);
     pgsqlP->res = PQgetResult (pgsqlP->pgsql);
+    if (NULL == pgsqlP->res)
+    {
+      dbh->status = scm_cons (scm_from_int (0), scm_from_utf8_string ("row end"));
+      return SCM_BOOL_F;
+    }
   }
 
   /* Check result status before unpacking the data! */
@@ -407,7 +411,7 @@ SCM __postgresql_getrow_g_db_handle (gdbi_db_handle_t *dbh)
                 PQfname (pgsqlP->res, f));
       dbh->status = scm_cons (scm_from_int (1), scm_from_utf8_string (msg));
       pgsqlP->lget++;
-      return SCM_EOL;
+      return SCM_BOOL_F;
     }
 
     retrow = scm_append (scm_list_2 (
@@ -439,15 +443,15 @@ void __postgresql_params_query_g_db_handle (gdbi_db_handle_t *g_db_handle,
   PGresult *res = NULL;
   char errbuf[1024] = {0};
 
-  values = malloc (sizeof (char *) * argc);
-  lengths = malloc (sizeof (int) * argc);
-  formats = malloc (sizeof (int) * argc);
+  values = calloc (argc, sizeof (char *));
+  lengths = calloc (argc, sizeof (int));
+  formats = calloc (argc, sizeof (int));
 
   if (NULL == pg_sql || NULL == values || NULL == lengths || NULL == formats)
   {
     snprintf (errbuf, sizeof (errbuf),
               "PostgreSQL parameterized query failed: out of memory");
-    dbi_set_error (g_db_handle->db_info, errbuf);
+    dbi_set_error (g_db_handle, errbuf);
     goto cleanup;
   }
 
@@ -477,7 +481,7 @@ void __postgresql_params_query_g_db_handle (gdbi_db_handle_t *g_db_handle,
     {
       snprintf (errbuf, sizeof (errbuf),
                 "PostgreSQL parameterized query failed: unsupported parameter");
-      dbi_set_error (g_db_handle->db_info, errbuf);
+      dbi_set_error (g_db_handle, errbuf);
       goto cleanup;
     }
 
@@ -509,7 +513,12 @@ cleanup:
   {
     snprintf (errbuf, sizeof (errbuf), "PostgreSQL execution failed: %s",
               PQerrorMessage (pgsqlP->pgsql));
-    dbi_set_error (g_db_handle->db_info, errbuf);
+    dbi_set_error (g_db_handle, errbuf);
+  }
+  else
+  {
+    g_db_handle->status
+      = scm_cons (scm_from_int (0), scm_from_utf8_string ("query ok"));
   }
 
   pgsqlP->res = res;
