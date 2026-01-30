@@ -29,7 +29,7 @@ so, for now, things seem OK.
 
 Status
 ------
-* '''Version 3.1.0''' -- stable, reliable, "feature complete".
+* '''Version 3.1.1''' -- stable, reliable, "feature complete".
 
 Documentation
 -------------
