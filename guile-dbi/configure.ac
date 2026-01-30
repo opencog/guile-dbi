@@ -15,14 +15,18 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([guile-dbi],[2.1.9],[bug-guile@gnu.org])
+AC_INIT([guile-dbi],[3.1.1],[bug-guile@gnu.org])
+
+# Interfaces is format CURRENT:REVISION:AGE
+DBI_INTERFACE="3:0:0"
+AC_SUBST([DBI_INTERFACE])
+
 AM_INIT_AUTOMAKE
 AM_MAINTAINER_MODE
 AC_CONFIG_SRCDIR([config.h.in])
@@ -56,38 +60,14 @@ PKG_CHECK_MODULES([GUILE], [guile-3.0])
 AC_MSG_NOTICE([GUILE_LIBS: $GUILE_LIBS])
 AC_MSG_NOTICE([GUILE_LTLIBS: $GUILE_LTLIBS])
 
-#--
-# The following are commented out because they seem to no longer be
-# defined. It seems they are no longer needed.
-#
-#    GUILE_PKG([3.0])
-#    GUILE_FLAGS
-#    GUILE_SITE_DIR
-
-#--
-# The following are commented out because they should not be needed.
-# They are left here as a hack of last resort. If things are not working
-# as expected, be sure to try setting the ACLOCAL_PATH first! Like so:
-#
-#    ACLOCAL_PATH=/usr/local/share/aclocal/ ./autogen.sh --no-configure
-#
-# If that doesn't fix things, then maybe uncommenting the lines below
-# will solve something. Maybe. Maybe not.
-#
-# CFLAGS="${CFLAGS} ${LTDLINCL} `$GUILE_CONFIG compile`"
-# LIBS="$LIBLTDL `$GUILE_CONFIG link`"
-# GUILE_SITE=`$GUILE_CONFIG info sitedir`
+# Get the Guile site directory for installing .scm files
+GUILE_SITE=`$PKG_CONFIG --variable=sitedir guile-3.0`
+AC_SUBST([GUILE_SITE])
+AC_MSG_NOTICE([GUILE_SITE: $GUILE_SITE])
 
 # Check for makeinfo; avoid ugliness if not installed.
 AC_CHECK_PROG(have_makeinfo,makeinfo,yes,no)
 AM_CONDITIONAL(HAVE_MAKEINFO,test "x$have_makeinfo" = "xyes")
-
-. $srcdir/DBI-VERSION
-AC_SUBST(DBI_MAJOR_VERSION)
-AC_SUBST(DBI_MINOR_VERSION)
-AC_SUBST(DBI_MICRO_VERSION)
-AC_SUBST(DBI_INTERFACE)
-AC_SUBST(VERSION)
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_LANG([C])
@@ -113,3 +93,14 @@ AC_CONFIG_FILES([src/test/check-guile-dbi],
                 [chmod ugo+x src/test/check-guile-dbi])
 
 AC_OUTPUT
+dnl ====================================================================
+echo "
+$PACKAGE-$VERSION
+
+   prefix:      ${prefix}
+   compiler:    ${CC} ${CPPFLAGS} ${CFLAGS}
+   libs:        ${GUILE_LIBS}
+   ltlibs:      ${GUILE_LTLIBS}
+   site:        ${GUILE_SITE}
+   dbi-libver:  ${DBI_INTERFACE}
+"
