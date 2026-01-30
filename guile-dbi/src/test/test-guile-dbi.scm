@@ -63,7 +63,7 @@
     (dbi-close dbh)
     (zero? (car (dbi-get_status dbh)))))
 
-;; These tests expect failure (non-zero status)
+;; These tests expect failure (non-zero status) on closed connections
 (test-assert "guile dbi query using closed connection fails"
   (begin
     (dbi-query dbh "select * from test;")
@@ -76,10 +76,12 @@
 (test-assert "close a closed connection is no-op"
   (begin
     (dbi-close dbh)
-    ;; Closing an already-closed connection should not error
     #t))
+
+;; Capture results before test-end clears the runner
+(define test-result (test-runner-fail-count (test-runner-current)))
 
 (test-end "guile-dbi")
 
 ;; Exit with proper status for make check
-(exit (if (zero? (test-runner-fail-count (test-runner-current))) 0 1))
+(exit (if (zero? test-result) 0 1))
