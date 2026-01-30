@@ -1,3 +1,9 @@
+Version 3.0.1 (2026-01-28)
+	* Support parameter query (github issue #14 pull req #15)
+
+Version 3.0.0 (2025-08-18)
+	* Bump version number to avoid general confusion.
+
 Version 2.1.9 (2023-07-03):
 	* Update autoconf scripts.
 
