@@ -140,7 +140,10 @@ SCM_DEFINE (close_g_db_handle, "dbi-close", 1, 0, 0, (SCM db_handle),
   gdbi_db_handle_t *g_db_handle = NULL;
   void (*dbd_close) (gdbi_db_handle_t *);
 
-  SCM_ASSERT (DBI_SMOB_P (db_handle), db_handle, SCM_ARG1, FUNC_NAME);
+  /* Handle already-finalized smobs gracefully */
+  if (!DBI_SMOB_P (db_handle))
+    return SCM_UNSPECIFIED;
+
   g_db_handle = (gdbi_db_handle_t *)SCM_SMOB_DATA (db_handle);
 
   if (g_db_handle->closed == SCM_BOOL_T)
