@@ -1,4 +1,5 @@
-#!/usr/bin/guile -s
+#!/usr/bin/env guile
+-s
 !#
 
 (use-modules (dbi dbi))
