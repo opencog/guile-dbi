@@ -23,6 +23,11 @@
 
 AC_PREREQ([2.69])
 AC_INIT([guile-dbi],[3.1.1],[bug-guile@gnu.org])
+
+# Interfaces is format CURRENT:REVISION:AGE
+DBI_INTERFACE="3:0:0"
+AC_SUBST([DBI_INTERFACE])
+
 AM_INIT_AUTOMAKE
 AM_MAINTAINER_MODE
 AC_CONFIG_SRCDIR([config.h.in])
@@ -65,13 +70,6 @@ AC_MSG_NOTICE([GUILE_SITE: $GUILE_SITE])
 AC_CHECK_PROG(have_makeinfo,makeinfo,yes,no)
 AM_CONDITIONAL(HAVE_MAKEINFO,test "x$have_makeinfo" = "xyes")
 
-. $srcdir/DBI-VERSION
-AC_SUBST(DBI_MAJOR_VERSION)
-AC_SUBST(DBI_MINOR_VERSION)
-AC_SUBST(DBI_MICRO_VERSION)
-AC_SUBST(DBI_INTERFACE)
-AC_SUBST(VERSION)
-
 # Checks for typedefs, structures, and compiler characteristics.
 AC_LANG([C])
 AC_CANONICAL_HOST
@@ -102,6 +100,7 @@ $PACKAGE-$VERSION
 
    prefix:      ${prefix}
    compiler:    ${CC} ${CPPFLAGS} ${CFLAGS}
-   link:        ${LIBS}
+   link:        ${GUILE_LIBS}
    site:        ${GUILE_SITE}
+   dbi-libver:  ${DBI_INTERFACE}
 "
