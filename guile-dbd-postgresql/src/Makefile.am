@@ -15,8 +15,7 @@
 # GNU General Public License for more details.
 # 
 # You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 #                                               -*- Makefile -*-
 # Process this file with autoconf to produce a configure script.
@@ -25,9 +24,7 @@
 AUTOMAKE_OPTIONS = gnu
 AM_CPPFLAGS = $(CFLAGS) -I/usr/include
 
-
 lib_LTLIBRARIES = libguile-dbd-postgresql.la
-
 
 libguile_dbd_postgresql_la_SOURCES = guile-dbd-postgresql.c
 libguile_dbd_postgresql_la_LIBADD = -ldl -lz -lpq $(LIBS)
@@ -35,3 +32,5 @@ libguile_dbd_postgresql_la_LDFLAGS = -export-dynamic \
 	-version-info @DBD_INTERFACE@
 libguile_dbd_postgresql_la_DEPENDENCIES = $(LTLIBOBJS)
 
+install-exec-hook:
+	-ldconfig

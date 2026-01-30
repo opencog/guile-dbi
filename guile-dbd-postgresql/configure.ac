@@ -22,7 +22,12 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([guile-dbd-postgresql],[2.1.9],[bug-guile@gnu.org])
+AC_INIT([guile-dbd-postgresql],[3.1.1],[bug-guile@gnu.org])
+
+# Interfaces is format CURRENT:REVISION:AGE
+DBD_INTERFACE="3:0:0"
+AC_SUBST([DBD_INTERFACE])
+
 AM_INIT_AUTOMAKE
 AM_MAINTAINER_MODE
 AC_CONFIG_HEADERS([config.h])
@@ -65,13 +70,6 @@ CFLAGS="${CFLAGS:+${CFLAGS} }$PQ_CFLAGS $GUILE_DBI_CFLAGS \
         `guile-config compile`"
 LIBS=`guile-config link`
 
-. $srcdir/DBD-VERSION
-AC_SUBST(DBD_MAJOR_VERSION)
-AC_SUBST(DBD_MINOR_VERSION)
-AC_SUBST(DBD_MICRO_VERSION)
-AC_SUBST(DBD_INTERFACE)
-AC_SUBST(VERSION)
-
 AC_CONFIG_FILES([Makefile
                  src/Makefile])
 
@@ -85,4 +83,3 @@ $PACKAGE-$VERSION
    compiler:    ${CC} ${CPPFLAGS} ${CFLAGS}
    link:        ${LIBS}
 "
-

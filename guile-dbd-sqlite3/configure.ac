@@ -23,7 +23,12 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([guile-dbd-sqlite3],[2.1.9],[bug-guile@gnu.org])
+AC_INIT([guile-dbd-sqlite3],[3.3.1],[bug-guile@gnu.org])
+
+# Interfaces is format CURRENT:REVISION:AGE
+DBD_INTERFACE="3:0:0"
+AC_SUBST([DBD_INTERFACE])
+
 AM_INIT_AUTOMAKE
 AM_MAINTAINER_MODE
 AC_CONFIG_HEADERS([config.h])
@@ -66,12 +71,6 @@ CFLAGS="${CFLAGS:+${CFLAGS} }${GUILE_CFLAGS} \
         ${GUILE_DBI_CFLAGS} ${SQLITE3_CFLAGS}"
 LIBS="${GUILE_LIBS} ${SQLITE3_LIBS}"
 
-. $srcdir/DBD-VERSION
-AC_SUBST(DBD_MAJOR_VERSION)
-AC_SUBST(DBD_MINOR_VERSION)
-AC_SUBST(DBD_MICRO_VERSION)
-AC_SUBST(DBD_INTERFACE)
-AC_SUBST(VERSION)
 AC_SUBST(SQLITE3_CFLAGS)
 AC_SUBST(SQLITE3_LIBS)
 
@@ -87,4 +86,5 @@ $PACKAGE-$VERSION
    prefix:      ${prefix}
    compiler:    ${CC} ${CPPFLAGS} ${CFLAGS}
    link:        ${LIBS}
+   dbd-libver:  ${DBD_INTERFACE}
 "
