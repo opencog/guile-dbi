@@ -8,8 +8,8 @@ The system is 'generic' in the sense that the same programming interface
 (front end) can be used with different databases. The DBI (database
 independent) part provides the scheme interfaces. The DBD (database
 dependent) plugins connect to an actual SQL server. Currently, there are
-DBD back-ends for Postgres, MySQL and SQLite3. Creating additional DBD
-back-ends requires a small amount of C coding, but is a straightforward
+DBD back-ends for Postgres, MariaDB/MySQL and SQLite3. Creating additional
+DBD back-ends requires a small amount of C coding, but is a straightforward
 task.
 
 Guile-dbi is simple - which is both a blessing and a curse. For the most
@@ -91,6 +91,7 @@ cd build
 make
 sudo make install
 ```
+Optional: run `make check`
 
 After doing this, the tutorial in
 [the user manual](https://htmlpreview.github.io/?https://github.com/opencog/guile-dbi/blob/master/website/guile-dbi.html)
@@ -101,4 +102,4 @@ License
 -------
 Guile-dbi is distributed under the Gnu GPLv2 license. Code and website
 were developed by Maurizio Boriani (2005-2006) and are currently
-maintained by Linas Vepstas (2008-2019).
+maintained by Linas Vepstas (2008-2026).
