@@ -35,6 +35,8 @@
 static char *strndup (const char *s, size_t n)
 {
   char *p = malloc (n + 1);
+  if (p == NULL)
+    return NULL;
   strncpy (p, s, n);
   p[n] = 0;
   return p;
@@ -117,6 +119,7 @@ void __mysql_make_g_db_handle (gdbi_db_handle_t *dbh)
       char *sport
         = scm_to_locale_string (scm_list_ref (cp_list, scm_from_int (5)));
       port = atoi (sport);
+      free (sport);
       ret = mysql_real_connect (mysqlP->mysql, loc, user, pass, db, port, NULL,
                                 0);
       if (items == 7)
@@ -124,6 +127,7 @@ void __mysql_make_g_db_handle (gdbi_db_handle_t *dbh)
         char *sretn
           = scm_to_locale_string (scm_list_ref (cp_list, scm_from_int (6)));
         mysqlP->retn = atoi (sretn);
+        free (sretn);
       }
     }
     else
@@ -135,6 +139,7 @@ void __mysql_make_g_db_handle (gdbi_db_handle_t *dbh)
         char *sretn
           = scm_to_locale_string (scm_list_ref (cp_list, scm_from_int (5)));
         mysqlP->retn = atoi (sretn);
+        free (sretn);
       }
     }
 
@@ -374,14 +379,16 @@ SCM static getrow_for_stmt (gdbi_db_handle_t *dbh)
   mysql_free_result (mysqlP->meta);
   mysqlP->meta = NULL;
 
-  free (mysqlP->stmt);
+  if (mysqlP->res)
+  {
+    mysql_free_result (mysqlP->res);
+    mysqlP->res = NULL;
+  }
+
+  mysql_stmt_close (mysqlP->stmt);
   mysqlP->stmt = NULL;
 
-  free (mysqlP->res);
-  mysqlP->res = NULL;
-
   mysqlP->retn = 0;
-  mysql_stmt_close (mysqlP->stmt);
 
   return retrow;
 }
@@ -481,7 +488,7 @@ SCM getrow_common (gdbi_db_handle_t *dbh)
       /* todo: error msg to be translated */
       dbh->status = scm_cons (scm_from_int (1),
                               scm_from_locale_string ("unknown field type"));
-      return SCM_EOL;
+      return SCM_BOOL_F;
       break;
     }
     retrow = scm_append (scm_list_2 (
@@ -501,6 +508,13 @@ SCM getrow_common (gdbi_db_handle_t *dbh)
 SCM __mysql_getrow_g_db_handle (gdbi_db_handle_t *dbh)
 {
   gdbi_mysql_ds_t *mysqlP = (gdbi_mysql_ds_t *)dbh->db_info;
+
+  if (mysqlP == NULL)
+  {
+    dbh->status = scm_cons (scm_from_int (1),
+                            scm_from_locale_string ("invalid dbi connection"));
+    return SCM_BOOL_F;
+  }
 
   if (mysqlP->stmt)
     return getrow_for_stmt (dbh);
@@ -545,7 +559,8 @@ void __mysql_params_query_g_db_handle (gdbi_db_handle_t *dbh, const char *query,
 
   if (mysqlP->result_bind)
   {
-    free_binds (mysqlP->result_bind, argc);
+    free_binds (mysqlP->result_bind, mysqlP->num_fields);
+    mysqlP->result_bind = NULL;
   }
 
   if (mysqlP->is_null)
@@ -717,7 +732,8 @@ void __mysql_params_query_g_db_handle (gdbi_db_handle_t *dbh, const char *query,
       case MYSQL_TYPE_VARCHAR:
       default:
         b->buffer_type = MYSQL_TYPE_STRING;
-        b->buffer_length = params_bind[i].buffer_length + 1;
+        /* Use field length from metadata, not params_bind which is for input */
+        b->buffer_length = fld->length + 1;
         b->buffer = calloc (b->buffer_length, 1);
         break;
       }
@@ -769,15 +785,12 @@ cleanup_meta:
     mysqlP->meta = NULL;
   }
 
-close_stmt:
+cleanup_stmt:
   if (mysqlP->stmt)
   {
     mysql_stmt_close (mysqlP->stmt);
+    mysqlP->stmt = NULL;
   }
-
-cleanup_stmt:
-  free (mysqlP->stmt);
-  mysqlP->stmt = NULL;
 
   mysqlP->retn = 0;
 
