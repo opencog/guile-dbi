@@ -100,7 +100,8 @@ $PACKAGE-$VERSION
 
    prefix:      ${prefix}
    compiler:    ${CC} ${CPPFLAGS} ${CFLAGS}
-   link:        ${GUILE_LIBS}
+   libs:        ${GUILE_LIBS}
+   ltlibs:      ${GUILE_LTLIBS}
    site:        ${GUILE_SITE}
    dbi-libver:  ${DBI_INTERFACE}
 "
