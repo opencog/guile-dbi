@@ -1,5 +1,6 @@
-Version 3.0.1 (2026-01-28)
+Version 3.1.0 (2026-01-28)
 	* Support parameter query (github issue #14 pull req #15)
+	* (Undo incorrectly named version 3.0.1)
 
 Version 3.0.0 (2025-08-18)
 	* Bump version number to avoid general confusion.
