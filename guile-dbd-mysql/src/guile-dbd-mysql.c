@@ -186,7 +186,7 @@ void __mysql_make_g_db_handle (gdbi_db_handle_t *dbh)
 void __mysql_close_g_db_handle (gdbi_db_handle_t *dbh)
 {
   gdbi_mysql_ds_t *mysqlP = (gdbi_mysql_ds_t *)dbh->db_info;
-  if (mysqlP == NULL)
+   if (mysqlP == NULL)
   {
     if (dbh->in_free)
       return; /* don't scm anything if in GC */
@@ -333,8 +333,15 @@ SCM static getrow_for_stmt (gdbi_db_handle_t *dbh)
     {
       switch (b->buffer_type)
       {
+      case MYSQL_TYPE_TINY:
+        value = scm_from_int ((int)(*(int8_t *)b->buffer));
+        break;
+      case MYSQL_TYPE_SHORT:
+        value = scm_from_int ((int)(*(int16_t *)b->buffer));
+        break;
       case MYSQL_TYPE_LONG:
-        value = scm_from_int (*(int *)b->buffer);
+      case MYSQL_TYPE_INT24:
+        value = scm_from_int (*(int32_t *)b->buffer);
         break;
 
       case MYSQL_TYPE_LONGLONG:
@@ -342,12 +349,15 @@ SCM static getrow_for_stmt (gdbi_db_handle_t *dbh)
         break;
 
       case MYSQL_TYPE_DOUBLE:
+      case MYSQL_TYPE_FLOAT:
         value = scm_from_double (*(double *)b->buffer);
         break;
 
       case MYSQL_TYPE_STRING:
       case MYSQL_TYPE_VAR_STRING:
       case MYSQL_TYPE_VARCHAR:
+        // treat DECIMAL as string to avoid precision loss
+      case MYSQL_TYPE_NEWDECIMAL:
         value = scm_from_locale_stringn ((char *)b->buffer, *b->length);
         break;
 
@@ -655,34 +665,51 @@ void __mysql_params_query_g_db_handle (gdbi_db_handle_t *dbh, const char *query,
 
       switch (fld->type)
       {
+      case MYSQL_TYPE_TINY:
+        b->buffer_type = MYSQL_TYPE_TINY;
+        b->buffer = calloc (1, sizeof (int8_t));
+        b->buffer_length = sizeof (int8_t);
+        break;
+
+      case MYSQL_TYPE_SHORT:
+        b->buffer_type = MYSQL_TYPE_SHORT;
+        b->buffer = calloc (1, sizeof (int16_t));
+        b->buffer_length = sizeof (int16_t);
+        break;
+
       case MYSQL_TYPE_LONG:
       case MYSQL_TYPE_INT24:
         b->buffer_type = MYSQL_TYPE_LONG;
-        b->buffer = calloc (sizeof (long), 1);
-        b->buffer_length = sizeof (long);
+        b->buffer = calloc (1, sizeof (int32_t));
+        b->buffer_length = sizeof (int32_t);
         break;
 
       case MYSQL_TYPE_LONGLONG:
-        b->buffer = calloc (sizeof (long long), 1);
         b->buffer_type = MYSQL_TYPE_LONGLONG;
-        b->buffer_length = sizeof (long long);
+        b->buffer = calloc (1, sizeof (int64_t));
+        b->buffer_length = sizeof (int64_t);
         break;
 
       case MYSQL_TYPE_FLOAT:
+        b->buffer_type = MYSQL_TYPE_FLOAT;
+        b->buffer = calloc (1, sizeof (float));
+        b->buffer_length = sizeof (float);
+        break;
+
       case MYSQL_TYPE_DOUBLE:
-        b->buffer = calloc (sizeof (double), 1);
         b->buffer_type = MYSQL_TYPE_DOUBLE;
+        b->buffer = calloc (1, sizeof (double));
         b->buffer_length = sizeof (double);
         break;
 
+      case MYSQL_TYPE_NEWDECIMAL:
       case MYSQL_TYPE_STRING:
       case MYSQL_TYPE_VAR_STRING:
       case MYSQL_TYPE_VARCHAR:
       default:
         b->buffer_type = MYSQL_TYPE_STRING;
-        /* Use field length from metadata, not params_bind which is for input */
         b->buffer_length = fld->length + 1;
-        b->buffer = calloc (b->buffer_length, 1);
+        b->buffer = calloc (1, b->buffer_length);
         break;
       }
 
