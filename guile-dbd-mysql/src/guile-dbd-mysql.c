@@ -343,16 +343,15 @@ SCM static getrow_for_stmt (gdbi_db_handle_t *dbh)
       case MYSQL_TYPE_INT24:
         value = scm_from_int (*(int32_t *)b->buffer);
         break;
-
       case MYSQL_TYPE_LONGLONG:
         value = scm_from_int64 (*(long long *)b->buffer);
         break;
-
       case MYSQL_TYPE_DOUBLE:
-      case MYSQL_TYPE_FLOAT:
         value = scm_from_double (*(double *)b->buffer);
         break;
-
+      case MYSQL_TYPE_FLOAT:
+        value = scm_from_double ((double)(*(float *)b->buffer));
+        break;
       case MYSQL_TYPE_STRING:
       case MYSQL_TYPE_VAR_STRING:
       case MYSQL_TYPE_VARCHAR:
@@ -360,7 +359,6 @@ SCM static getrow_for_stmt (gdbi_db_handle_t *dbh)
       case MYSQL_TYPE_NEWDECIMAL:
         value = scm_from_locale_stringn ((char *)b->buffer, *b->length);
         break;
-
       default:
         value = SCM_UNSPECIFIED;
         break;
@@ -368,7 +366,9 @@ SCM static getrow_for_stmt (gdbi_db_handle_t *dbh)
     }
 
     /* 3. (column-name . value) */
-    retrow = scm_append (scm_list_2 (retrow, scm_list_1 (scm_cons (scm_from_locale_string (fields[f].name), value))));
+    retrow = scm_append (scm_list_2 (
+      retrow,
+      scm_list_1 (scm_cons (scm_from_locale_string (fields[f].name), value))));
   }
 
   dbh->status = scm_cons (scm_from_int (0), scm_from_locale_string ("row fetched"));
