@@ -392,7 +392,7 @@ SCM static getrow_for_stmt (gdbi_db_handle_t *dbh)
       case MYSQL_TYPE_STRING:
       case MYSQL_TYPE_VAR_STRING:
       case MYSQL_TYPE_VARCHAR:
-        // treat DECIMAL as string to avoid precision loss
+        /* treat DECIMAL as string to avoid precision loss. */
       case MYSQL_TYPE_NEWDECIMAL:
         value = scm_from_locale_stringn ((char *)b->buffer, *b->length);
         break;
@@ -408,7 +408,8 @@ SCM static getrow_for_stmt (gdbi_db_handle_t *dbh)
       scm_list_1 (scm_cons (scm_from_locale_string (fields[f].name), value))));
   }
 
-  dbh->status = scm_cons (scm_from_int (0), scm_from_locale_string ("row fetched"));
+  dbh->status
+    = scm_cons (scm_from_int (0), scm_from_locale_string ("row fetched"));
 
   return retrow;
 }
