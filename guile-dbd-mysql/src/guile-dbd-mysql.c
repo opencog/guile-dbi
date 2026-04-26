@@ -508,7 +508,8 @@ SCM getrow_common (gdbi_db_handle_t *dbh)
     }
   }
   /* todo: error msg to be translated */
-  dbh->status = scm_cons (scm_from_int (0), scm_from_locale_string ("row fetched"));
+  dbh->status
+    = scm_cons (scm_from_int (0), scm_from_locale_string ("row fetched"));
   return (retrow);
 }
 
@@ -518,15 +519,9 @@ SCM __mysql_getrow_g_db_handle (gdbi_db_handle_t *dbh)
 
   if (mysqlP == NULL)
   {
-    dbh->status = scm_cons (scm_from_int (1), scm_from_locale_string ("invalid dbi connection"));
+    dbh->status = scm_cons (scm_from_int (1),
+                            scm_from_locale_string ("invalid dbi connection"));
     return SCM_BOOL_F;
-  }
-
-  if (dbh->db_info == NULL)
-  {
-    /* todo: error msg to be translated */
-    dbh->status = scm_cons (scm_from_int (1), scm_from_locale_string ("invalid dbi connection"));
-    return (SCM_BOOL_F);
   }
 
   if (mysqlP->stmt)
@@ -536,7 +531,8 @@ SCM __mysql_getrow_g_db_handle (gdbi_db_handle_t *dbh)
 }
 
 #define MAX_TMPVAR 128
-void __mysql_params_query_g_db_handle (gdbi_db_handle_t *dbh, const char *query, int argc, const SCM *argv)
+void __mysql_params_query_g_db_handle (gdbi_db_handle_t *dbh, const char *query,
+                                       int argc, const SCM *argv)
 {
   gdbi_mysql_ds_t *mysqlP = (gdbi_mysql_ds_t *)dbh->db_info;
   int i = 0;
@@ -544,7 +540,8 @@ void __mysql_params_query_g_db_handle (gdbi_db_handle_t *dbh, const char *query,
   if (MAX_TMPVAR < argc)
   {
     char buf[100] = {0};
-    snprintf (buf, sizeof (buf), "Exceeds %d limit, too many parameters", MAX_TMPVAR);
+    snprintf (buf, sizeof (buf), "Exceeds %d limit, too many parameters",
+              MAX_TMPVAR);
     dbh->status = scm_cons (scm_from_int (1), scm_from_utf8_string (buf));
     return;
   }
