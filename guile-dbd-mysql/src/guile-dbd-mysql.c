@@ -426,17 +426,19 @@ SCM getrow_common (gdbi_db_handle_t *dbh)
 
   mysqlP = (gdbi_mysql_ds_t *)dbh->db_info;
 
-  if ((row = mysql_fetch_row (mysqlP->res)) == NULL)
+  if (NULL == mysqlP->res)
   {
     /* todo: error msg to be translated */
-    dbh->status = scm_cons (scm_from_int (0), scm_from_locale_string ("row end"));
+    dbh->status = scm_cons (scm_from_int (1),
+                            scm_from_locale_string ("missing query result"));
     return (SCM_BOOL_F);
   }
 
-  if (!mysqlP->res)
+  if ((row = mysql_fetch_row (mysqlP->res)) == NULL)
   {
     /* todo: error msg to be translated */
-    dbh->status = scm_cons (scm_from_int (1), scm_from_locale_string ("missing query result"));
+    dbh->status
+      = scm_cons (scm_from_int (0), scm_from_locale_string ("row end"));
     return (SCM_BOOL_F);
   }
 
