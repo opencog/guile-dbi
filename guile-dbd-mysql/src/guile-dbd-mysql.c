@@ -68,6 +68,25 @@ typedef struct
   int retn;
 } gdbi_mysql_ds_t;
 
+static void free_binds (MYSQL_BIND *binds, int cnt)
+{
+  int i;
+
+  if (binds)
+  {
+    for (i = 0; i < cnt; i++)
+    {
+      if (binds[i].buffer)
+      {
+        free (binds[i].buffer);
+      }
+    }
+
+    free (binds);
+    binds = NULL;
+  }
+}
+
 void __mysql_make_g_db_handle (gdbi_db_handle_t *dbh)
 {
   char sep = ':';
@@ -78,7 +97,8 @@ void __mysql_make_g_db_handle (gdbi_db_handle_t *dbh)
   if (scm_equal_p (scm_string_p (dbh->constr), SCM_BOOL_F) == SCM_BOOL_T)
   {
     /* todo: error msg to be translated */
-    dbh->status = scm_cons (scm_from_int (1), scm_from_locale_string ("missing connection string"));
+    dbh->status = scm_cons (
+      scm_from_int (1), scm_from_locale_string ("missing connection string"));
     return;
   }
 
@@ -186,12 +206,13 @@ void __mysql_make_g_db_handle (gdbi_db_handle_t *dbh)
 void __mysql_close_g_db_handle (gdbi_db_handle_t *dbh)
 {
   gdbi_mysql_ds_t *mysqlP = (gdbi_mysql_ds_t *)dbh->db_info;
-   if (mysqlP == NULL)
+  if (mysqlP == NULL)
   {
     if (dbh->in_free)
       return; /* don't scm anything if in GC */
     /* todo: error msg to be translated */
-    dbh->status = scm_cons (scm_from_int (1), scm_from_locale_string ("dbd info not found"));
+    dbh->status = scm_cons (scm_from_int (1),
+                            scm_from_locale_string ("dbd info not found"));
     return;
   }
   else if (mysqlP->mysql == NULL)
@@ -199,14 +220,49 @@ void __mysql_close_g_db_handle (gdbi_db_handle_t *dbh)
     if (0 == dbh->in_free)
     {
       /* todo: error msg to be translated */
-      dbh->status = scm_cons (scm_from_int (1), scm_from_locale_string ("dbi connection already closed"));
+      dbh->status
+        = scm_cons (scm_from_int (1),
+                    scm_from_locale_string ("dbi connection already closed"));
     }
     free (dbh->db_info);
     dbh->db_info = NULL;
     return;
   }
 
+  /* clean up prepared statement resources */
+  if (mysqlP->result_bind)
+  {
+    free_binds (mysqlP->result_bind, mysqlP->num_fields);
+    mysqlP->result_bind = NULL;
+  }
+
+  if (mysqlP->is_null)
+  {
+    free (mysqlP->is_null);
+    mysqlP->is_null = NULL;
+  }
+
+  if (mysqlP->lengths)
+  {
+    free (mysqlP->lengths);
+    mysqlP->lengths = NULL;
+  }
+
+  if (mysqlP->meta)
+  {
+    mysql_free_result (mysqlP->meta);
+    mysqlP->meta = NULL;
+  }
+
+  if (mysqlP->stmt)
+  {
+    mysql_stmt_free_result (mysqlP->stmt);
+    mysql_stmt_close (mysqlP->stmt);
+    mysqlP->stmt = NULL;
+  }
+
   mysql_close (mysqlP->mysql);
+
   if (mysqlP->res)
   {
     mysql_free_result (mysqlP->res);
@@ -269,25 +325,6 @@ void __mysql_query_g_db_handle (gdbi_db_handle_t *dbh, char *query)
   dbh->status = scm_cons (scm_from_int (0), scm_from_locale_string ("query ok, got results"));
 
   return;
-}
-
-static void free_binds (MYSQL_BIND *binds, int cnt)
-{
-  int i;
-
-  if (binds)
-  {
-    for (i = 0; i < cnt; i++)
-    {
-      if (binds[i].buffer)
-      {
-        free (binds[i].buffer);
-      }
-    }
-
-    free (binds);
-    binds = NULL;
-  }
 }
 
 SCM static getrow_for_stmt (gdbi_db_handle_t *dbh)
