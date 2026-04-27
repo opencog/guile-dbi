@@ -26,6 +26,7 @@
 #include <libguile.h>
 #include <mariadb/errmsg.h>
 #include <mariadb/mysql.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
