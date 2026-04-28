@@ -1,10 +1,13 @@
+Version 3.2.0 (2026-TBD)
+	* Add MySQL support for TINY, SHORT and LONGLONG types. (#19)
+
 Version 3.1.1 (2026-01-29)
 	* Add missing GUILE_SITE install bug - dbi.scm not installed.
-	* Remove over-complex, error-proine versioning system.
+	* Remove over-complex, error-prone versioning system.
 	* Port unit tests to srfi-64; fix unit test framework issues.
-	* Chane makefiles to run the unit tests.
+	* Change makefiles to run the unit tests.
 	* Add brand new unit tests for Postgres, MariaDB
-	* Fix assorted use-after-free, memleaks other issues.
+	* Fix assorted use-after-free, memleaks and other issues.
 
 Version 3.1.0 (2026-01-28)
 	* Support parameter query (github issue #14 pull req #15)
