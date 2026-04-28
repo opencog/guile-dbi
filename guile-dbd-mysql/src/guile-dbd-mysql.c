@@ -26,6 +26,7 @@
 #include <libguile.h>
 #include <mariadb/errmsg.h>
 #include <mariadb/mysql.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -47,8 +48,7 @@ static char *strndup (const char *s, size_t n)
 void __mysql_make_g_db_handle (gdbi_db_handle_t *dbh);
 void __mysql_close_g_db_handle (gdbi_db_handle_t *dbh);
 void __mysql_query_g_db_handle (gdbi_db_handle_t *dbh, char *query);
-void __mysql_params_query_g_db_handle (gdbi_db_handle_t *dbh, const char *query,
-                                       int argc, const SCM *argv);
+void __mysql_params_query_g_db_handle (gdbi_db_handle_t *dbh, const char *query, int argc, const SCM *argv);
 SCM __mysql_getrow_g_db_handle (gdbi_db_handle_t *dbh);
 
 typedef struct
@@ -68,6 +68,25 @@ typedef struct
 
   int retn;
 } gdbi_mysql_ds_t;
+
+static void free_binds (MYSQL_BIND *binds, int cnt)
+{
+  int i;
+
+  if (binds)
+  {
+    for (i = 0; i < cnt; i++)
+    {
+      if (binds[i].buffer)
+      {
+        free (binds[i].buffer);
+      }
+    }
+
+    free (binds);
+    binds = NULL;
+  }
+}
 
 void __mysql_make_g_db_handle (gdbi_db_handle_t *dbh)
 {
@@ -93,21 +112,17 @@ void __mysql_make_g_db_handle (gdbi_db_handle_t *dbh)
   {
     void *ret = 0;
     int port = 0;
-    char *user
-      = scm_to_locale_string (scm_list_ref (cp_list, scm_from_int (0)));
-    char *pass
-      = scm_to_locale_string (scm_list_ref (cp_list, scm_from_int (1)));
+    char *user = scm_to_locale_string (scm_list_ref (cp_list, scm_from_int (0)));
+    char *pass = scm_to_locale_string (scm_list_ref (cp_list, scm_from_int (1)));
     char *db = scm_to_locale_string (scm_list_ref (cp_list, scm_from_int (2)));
-    char *ctyp
-      = scm_to_locale_string (scm_list_ref (cp_list, scm_from_int (3)));
+    char *ctyp = scm_to_locale_string (scm_list_ref (cp_list, scm_from_int (3)));
     char *loc = scm_to_locale_string (scm_list_ref (cp_list, scm_from_int (4)));
 
     mysqlP = (gdbi_mysql_ds_t *)calloc (sizeof (gdbi_mysql_ds_t), 1);
 
     if (mysqlP == NULL)
     {
-      dbh->status = scm_cons (scm_from_int (errno),
-                              scm_from_locale_string (strerror (errno)));
+      dbh->status = scm_cons (scm_from_int (errno), scm_from_locale_string (strerror (errno)));
       return;
     }
 
@@ -116,28 +131,23 @@ void __mysql_make_g_db_handle (gdbi_db_handle_t *dbh)
 
     if (strcmp (ctyp, "tcp") == 0)
     {
-      char *sport
-        = scm_to_locale_string (scm_list_ref (cp_list, scm_from_int (5)));
+      char *sport = scm_to_locale_string (scm_list_ref (cp_list, scm_from_int (5)));
       port = atoi (sport);
       free (sport);
-      ret = mysql_real_connect (mysqlP->mysql, loc, user, pass, db, port, NULL,
-                                0);
+      ret = mysql_real_connect (mysqlP->mysql, loc, user, pass, db, port, NULL, 0);
       if (items == 7)
       {
-        char *sretn
-          = scm_to_locale_string (scm_list_ref (cp_list, scm_from_int (6)));
+        char *sretn = scm_to_locale_string (scm_list_ref (cp_list, scm_from_int (6)));
         mysqlP->retn = atoi (sretn);
         free (sretn);
       }
     }
     else
     {
-      ret = mysql_real_connect (mysqlP->mysql, NULL, user, pass, db, port, loc,
-                                0);
+      ret = mysql_real_connect (mysqlP->mysql, NULL, user, pass, db, port, loc, 0);
       if (items == 6)
       {
-        char *sretn
-          = scm_to_locale_string (scm_list_ref (cp_list, scm_from_int (5)));
+        char *sretn = scm_to_locale_string (scm_list_ref (cp_list, scm_from_int (5)));
         mysqlP->retn = atoi (sretn);
         free (sretn);
       }
@@ -167,8 +177,7 @@ void __mysql_make_g_db_handle (gdbi_db_handle_t *dbh)
 
     if (ret == 0)
     {
-      dbh->status = scm_cons (
-        scm_from_int (1), scm_from_locale_string (mysql_error (mysqlP->mysql)));
+      dbh->status = scm_cons (scm_from_int (1), scm_from_locale_string (mysql_error (mysqlP->mysql)));
       mysql_close (mysqlP->mysql);
       mysqlP->mysql = NULL;
       free (mysqlP);
@@ -178,8 +187,7 @@ void __mysql_make_g_db_handle (gdbi_db_handle_t *dbh)
     else
     {
       /* todo: error msg to be translated */
-      dbh->status
-        = scm_cons (scm_from_int (0), scm_from_locale_string ("db connected"));
+      dbh->status = scm_cons (scm_from_int (0), scm_from_locale_string ("db connected"));
       dbh->db_info = mysqlP;
       dbh->closed = SCM_BOOL_F;
       return;
@@ -188,8 +196,7 @@ void __mysql_make_g_db_handle (gdbi_db_handle_t *dbh)
   else
   {
     /* todo: error msg to be translated */
-    dbh->status = scm_cons (
-      scm_from_int (1), scm_from_locale_string ("invalid connection string"));
+    dbh->status = scm_cons (scm_from_int (1), scm_from_locale_string ("invalid connection string"));
     dbh->db_info = NULL;
     return;
   }
@@ -223,7 +230,40 @@ void __mysql_close_g_db_handle (gdbi_db_handle_t *dbh)
     return;
   }
 
+  /* clean up prepared statement resources */
+  if (mysqlP->result_bind)
+  {
+    free_binds (mysqlP->result_bind, mysqlP->num_fields);
+    mysqlP->result_bind = NULL;
+  }
+
+  if (mysqlP->is_null)
+  {
+    free (mysqlP->is_null);
+    mysqlP->is_null = NULL;
+  }
+
+  if (mysqlP->lengths)
+  {
+    free (mysqlP->lengths);
+    mysqlP->lengths = NULL;
+  }
+
+  if (mysqlP->meta)
+  {
+    mysql_free_result (mysqlP->meta);
+    mysqlP->meta = NULL;
+  }
+
+  if (mysqlP->stmt)
+  {
+    mysql_stmt_free_result (mysqlP->stmt);
+    mysql_stmt_close (mysqlP->stmt);
+    mysqlP->stmt = NULL;
+  }
+
   mysql_close (mysqlP->mysql);
+
   if (mysqlP->res)
   {
     mysql_free_result (mysqlP->res);
@@ -238,8 +278,7 @@ void __mysql_close_g_db_handle (gdbi_db_handle_t *dbh)
 
   if (dbh->in_free)
     return; /* don't scm anything if in GC */
-  dbh->status
-    = scm_cons (scm_from_int (0), scm_from_locale_string ("dbi closed"));
+  dbh->status = scm_cons (scm_from_int (0), scm_from_locale_string ("dbi closed"));
   return;
 }
 
@@ -251,8 +290,7 @@ void __mysql_query_g_db_handle (gdbi_db_handle_t *dbh, char *query)
   if (dbh->db_info == NULL)
   {
     /* todo: error msg to be translated */
-    dbh->status = scm_cons (scm_from_int (1),
-                            scm_from_locale_string ("invalid dbi connection"));
+    dbh->status = scm_cons (scm_from_int (1), scm_from_locale_string ("invalid dbi connection"));
     return;
   }
 
@@ -274,42 +312,20 @@ void __mysql_query_g_db_handle (gdbi_db_handle_t *dbh, char *query)
   if (err)
   {
     dbh->status
-      = scm_cons (scm_from_int (mysqlP->mysql->net.last_errno),
-                  scm_from_locale_string (mysql_error (mysqlP->mysql)));
+      = scm_cons (scm_from_int (mysqlP->mysql->net.last_errno), scm_from_locale_string (mysql_error (mysqlP->mysql)));
     return;
   }
 
   mysqlP->res = mysql_use_result (mysqlP->mysql);
   if (mysqlP->res == NULL)
   {
-    dbh->status = scm_cons (scm_from_int (0),
-                            scm_from_locale_string ("query ok, no results"));
+    dbh->status = scm_cons (scm_from_int (0), scm_from_locale_string ("query ok, no results"));
     return;
   }
 
-  dbh->status = scm_cons (scm_from_int (0),
-                          scm_from_locale_string ("query ok, got results"));
+  dbh->status = scm_cons (scm_from_int (0), scm_from_locale_string ("query ok, got results"));
 
   return;
-}
-
-static void free_binds (MYSQL_BIND *binds, int cnt)
-{
-  int i;
-
-  if (binds)
-  {
-    for (i = 0; i < cnt; i++)
-    {
-      if (binds[i].buffer)
-      {
-        free (binds[i].buffer);
-      }
-    }
-
-    free (binds);
-    binds = NULL;
-  }
 }
 
 SCM static getrow_for_stmt (gdbi_db_handle_t *dbh)
@@ -317,9 +333,29 @@ SCM static getrow_for_stmt (gdbi_db_handle_t *dbh)
   gdbi_mysql_ds_t *mysqlP = (gdbi_mysql_ds_t *)dbh->db_info;
   SCM retrow = SCM_EOL;
   int f;
+  int status;
 
   MYSQL_FIELD *fields = mysql_fetch_fields (mysqlP->meta);
-  mysql_stmt_fetch (mysqlP->stmt);
+
+  status = mysql_stmt_fetch (mysqlP->stmt);
+
+  if (0 != status)
+  {
+    /* todo: error msg to be translated */
+    if (MYSQL_NO_DATA == status)
+    {
+      dbh->status = scm_cons (scm_from_int (0), scm_from_locale_string ("row end"));
+    }
+    else if (MYSQL_DATA_TRUNCATED == status)
+    {
+      dbh->status = scm_cons (scm_from_int (1), scm_from_locale_string ("data truncated"));
+    }
+    else
+    {
+      dbh->status = scm_cons (scm_from_int (1), scm_from_locale_string ("fetch failed"));
+    }
+    return (SCM_BOOL_F);
+  }
 
   for (f = 0; f < mysqlP->num_fields; f++)
   {
@@ -335,24 +371,32 @@ SCM static getrow_for_stmt (gdbi_db_handle_t *dbh)
     {
       switch (b->buffer_type)
       {
-      case MYSQL_TYPE_LONG:
-        value = scm_from_int (*(int *)b->buffer);
+      case MYSQL_TYPE_TINY:
+        value = scm_from_int ((int)(*(int8_t *)b->buffer));
         break;
-
+      case MYSQL_TYPE_SHORT:
+        value = scm_from_int ((int)(*(int16_t *)b->buffer));
+        break;
+      case MYSQL_TYPE_LONG:
+      case MYSQL_TYPE_INT24:
+        value = scm_from_int (*(int32_t *)b->buffer);
+        break;
       case MYSQL_TYPE_LONGLONG:
         value = scm_from_int64 (*(long long *)b->buffer);
         break;
-
       case MYSQL_TYPE_DOUBLE:
         value = scm_from_double (*(double *)b->buffer);
         break;
-
+      case MYSQL_TYPE_FLOAT:
+        value = scm_from_double ((double)(*(float *)b->buffer));
+        break;
       case MYSQL_TYPE_STRING:
       case MYSQL_TYPE_VAR_STRING:
       case MYSQL_TYPE_VARCHAR:
+        /* treat DECIMAL as string to avoid precision loss. */
+      case MYSQL_TYPE_NEWDECIMAL:
         value = scm_from_locale_stringn ((char *)b->buffer, *b->length);
         break;
-
       default:
         value = SCM_UNSPECIFIED;
         break;
@@ -368,28 +412,6 @@ SCM static getrow_for_stmt (gdbi_db_handle_t *dbh)
   dbh->status
     = scm_cons (scm_from_int (0), scm_from_locale_string ("row fetched"));
 
-  free (mysqlP->is_null);
-  mysqlP->is_null = NULL;
-
-  free (mysqlP->lengths);
-  mysqlP->lengths = NULL;
-
-  free_binds (mysqlP->result_bind, mysqlP->num_fields);
-
-  mysql_free_result (mysqlP->meta);
-  mysqlP->meta = NULL;
-
-  if (mysqlP->res)
-  {
-    mysql_free_result (mysqlP->res);
-    mysqlP->res = NULL;
-  }
-
-  mysql_stmt_close (mysqlP->stmt);
-  mysqlP->stmt = NULL;
-
-  mysqlP->retn = 0;
-
   return retrow;
 }
 
@@ -403,17 +425,9 @@ SCM getrow_common (gdbi_db_handle_t *dbh)
   MYSQL_ROW row;
   MYSQL_FIELD *fields;
 
-  if (dbh->db_info == NULL)
-  {
-    /* todo: error msg to be translated */
-    dbh->status = scm_cons (scm_from_int (1),
-                            scm_from_locale_string ("invalid dbi connection"));
-    return (SCM_BOOL_F);
-  }
-
   mysqlP = (gdbi_mysql_ds_t *)dbh->db_info;
 
-  if (!mysqlP->res)
+  if (NULL == mysqlP->res)
   {
     /* todo: error msg to be translated */
     dbh->status = scm_cons (scm_from_int (1),
@@ -428,6 +442,7 @@ SCM getrow_common (gdbi_db_handle_t *dbh)
       = scm_cons (scm_from_int (0), scm_from_locale_string ("row end"));
     return (SCM_BOOL_F);
   }
+
   fnum = mysql_num_fields (mysqlP->res);
   fields = mysql_fetch_fields (mysqlP->res);
   les = mysql_fetch_lengths (mysqlP->res);
@@ -478,22 +493,18 @@ SCM getrow_common (gdbi_db_handle_t *dbh)
          MySQL stores times in UTC.  */
       value_str = strndup (row[f], les[f]);
       value = scm_from_locale_string (value_str);
-      value
-        = scm_strptime (scm_from_locale_string ("%Y-%m-%d %H:%M:%S"), value);
+      value = scm_strptime (scm_from_locale_string ("%Y-%m-%d %H:%M:%S"), value);
       value = SCM_CAR (value);
       value = scm_mktime (value, scm_from_locale_string ("GMT+0"));
       value = SCM_CAR (value);
       break;
     default:
       /* todo: error msg to be translated */
-      dbh->status = scm_cons (scm_from_int (1),
-                              scm_from_locale_string ("unknown field type"));
+      dbh->status = scm_cons (scm_from_int (1), scm_from_locale_string ("unknown field type"));
       return SCM_BOOL_F;
       break;
     }
-    retrow = scm_append (scm_list_2 (
-      retrow,
-      scm_list_1 (scm_cons (scm_from_locale_string (fields[f].name), value))));
+    retrow = scm_append (scm_list_2 (retrow, scm_list_1 (scm_cons (scm_from_locale_string (fields[f].name), value))));
     if (value_str != NULL)
     {
       free (value_str);
@@ -578,22 +589,19 @@ void __mysql_params_query_g_db_handle (gdbi_db_handle_t *dbh, const char *query,
   mysqlP->stmt = mysql_stmt_init (mysqlP->mysql);
   if (NULL == mysqlP->stmt)
   {
-    dbh->status = scm_cons (scm_from_int (1),
-                            scm_from_utf8_string ("mysql stmt init failed"));
+    dbh->status = scm_cons (scm_from_int (1), scm_from_utf8_string ("mysql stmt init failed"));
     return;
   }
 
   if (mysql_stmt_prepare (mysqlP->stmt, query, strlen (query)) != 0)
   {
-    dbh->status = scm_cons (
-      scm_from_int (1), scm_from_utf8_string (mysql_stmt_error (mysqlP->stmt)));
+    dbh->status = scm_cons (scm_from_int (1), scm_from_utf8_string (mysql_stmt_error (mysqlP->stmt)));
     goto cleanup_stmt;
   }
 
   if ((int)mysql_stmt_param_count (mysqlP->stmt) != argc)
   {
-    dbh->status = scm_cons (scm_from_int (1),
-                            scm_from_utf8_string ("params count mismatch"));
+    dbh->status = scm_cons (scm_from_int (1), scm_from_utf8_string ("params count mismatch"));
     goto cleanup_stmt;
   }
 
@@ -601,8 +609,7 @@ void __mysql_params_query_g_db_handle (gdbi_db_handle_t *dbh, const char *query,
   MYSQL_BIND *params_bind = calloc (argc, sizeof (MYSQL_BIND));
   if (!params_bind)
   {
-    dbh->status = scm_cons (
-      scm_from_int (1), scm_from_utf8_string ("out of memory for params_bind"));
+    dbh->status = scm_cons (scm_from_int (1), scm_from_utf8_string ("out of memory for params_bind"));
     goto cleanup_stmt;
   }
 
@@ -615,8 +622,7 @@ void __mysql_params_query_g_db_handle (gdbi_db_handle_t *dbh, const char *query,
   {
     if (scm_is_integer (argv[i]) || scm_is_bool (argv[i]))
     {
-      nums[i] = scm_is_bool (argv[i]) ? (scm_is_true (argv[i]) ? 1 : 0)
-                                      : scm_to_long_long (argv[i]);
+      nums[i] = scm_is_bool (argv[i]) ? (scm_is_true (argv[i]) ? 1 : 0) : scm_to_long_long (argv[i]);
       params_bind[i].buffer_type = MYSQL_TYPE_LONGLONG;
       params_bind[i].buffer = &nums[i];
     }
@@ -625,9 +631,7 @@ void __mysql_params_query_g_db_handle (gdbi_db_handle_t *dbh, const char *query,
       char *s = scm_to_locale_string (argv[i]);
       if (NULL == s)
       {
-        dbh->status
-          = scm_cons (scm_from_int (1),
-                      scm_from_utf8_string ("out of memory for string param"));
+        dbh->status = scm_cons (scm_from_int (1), scm_from_utf8_string ("out of memory for string param"));
         goto cleanup_params;
       }
       str[i] = s; /* save for later free */
@@ -641,23 +645,20 @@ void __mysql_params_query_g_db_handle (gdbi_db_handle_t *dbh, const char *query,
     }
     else
     {
-      dbh->status = scm_cons (
-        scm_from_int (1), scm_from_utf8_string ("unsupported parameter type"));
+      dbh->status = scm_cons (scm_from_int (1), scm_from_utf8_string ("unsupported parameter type"));
       goto cleanup_params;
     }
   }
 
   if (mysql_stmt_bind_param (mysqlP->stmt, params_bind) != 0)
   {
-    dbh->status = scm_cons (
-      scm_from_int (1), scm_from_utf8_string (mysql_stmt_error (mysqlP->stmt)));
+    dbh->status = scm_cons (scm_from_int (1), scm_from_utf8_string (mysql_stmt_error (mysqlP->stmt)));
     goto cleanup_params;
   }
 
   if (mysql_stmt_execute (mysqlP->stmt) != 0)
   {
-    dbh->status = scm_cons (
-      scm_from_int (1), scm_from_utf8_string (mysql_stmt_error (mysqlP->stmt)));
+    dbh->status = scm_cons (scm_from_int (1), scm_from_utf8_string (mysql_stmt_error (mysqlP->stmt)));
     goto cleanup_params;
   }
 
@@ -671,12 +672,9 @@ void __mysql_params_query_g_db_handle (gdbi_db_handle_t *dbh, const char *query,
     mysqlP->lengths = calloc (mysqlP->num_fields, sizeof (unsigned long));
     mysqlP->is_null = calloc (mysqlP->num_fields, sizeof (my_bool));
 
-    if (NULL == mysqlP->result_bind || NULL == mysqlP->lengths
-        || NULL == mysqlP->is_null)
+    if (NULL == mysqlP->result_bind || NULL == mysqlP->lengths || NULL == mysqlP->is_null)
     {
-      dbh->status
-        = scm_cons (scm_from_int (1),
-                    scm_from_utf8_string ("result_bind start: out of memory"));
+      dbh->status = scm_cons (scm_from_int (1), scm_from_utf8_string ("result_bind start: out of memory"));
       free_binds (mysqlP->result_bind, 0);
       goto cleanup_stmt;
     }
@@ -684,16 +682,14 @@ void __mysql_params_query_g_db_handle (gdbi_db_handle_t *dbh, const char *query,
     mysqlP->meta = mysql_stmt_result_metadata (mysqlP->stmt);
     if (NULL == mysqlP->meta)
     {
-      dbh->status = scm_cons (scm_from_int (1),
-                              scm_from_utf8_string ("result metadata error"));
+      dbh->status = scm_cons (scm_from_int (1), scm_from_utf8_string ("result metadata error"));
       goto cleanup_stmt;
     }
 
     MYSQL_FIELD *fields = mysql_fetch_fields (mysqlP->meta);
     if (NULL == fields)
     {
-      dbh->status = scm_cons (scm_from_int (1),
-                              scm_from_utf8_string ("fetch fields error"));
+      dbh->status = scm_cons (scm_from_int (1), scm_from_utf8_string ("fetch fields error"));
       goto cleanup_meta;
     }
 
@@ -707,50 +703,64 @@ void __mysql_params_query_g_db_handle (gdbi_db_handle_t *dbh, const char *query,
 
       switch (fld->type)
       {
+      case MYSQL_TYPE_TINY:
+        b->buffer_type = MYSQL_TYPE_TINY;
+        b->buffer = calloc (1, sizeof (int8_t));
+        b->buffer_length = sizeof (int8_t);
+        break;
+
+      case MYSQL_TYPE_SHORT:
+        b->buffer_type = MYSQL_TYPE_SHORT;
+        b->buffer = calloc (1, sizeof (int16_t));
+        b->buffer_length = sizeof (int16_t);
+        break;
+
       case MYSQL_TYPE_LONG:
       case MYSQL_TYPE_INT24:
         b->buffer_type = MYSQL_TYPE_LONG;
-        b->buffer = calloc (sizeof (long), 1);
-        b->buffer_length = sizeof (long);
+        b->buffer = calloc (1, sizeof (int32_t));
+        b->buffer_length = sizeof (int32_t);
         break;
 
       case MYSQL_TYPE_LONGLONG:
-        b->buffer = calloc (sizeof (long long), 1);
         b->buffer_type = MYSQL_TYPE_LONGLONG;
-        b->buffer_length = sizeof (long long);
+        b->buffer = calloc (1, sizeof (int64_t));
+        b->buffer_length = sizeof (int64_t);
         break;
 
       case MYSQL_TYPE_FLOAT:
+        b->buffer_type = MYSQL_TYPE_FLOAT;
+        b->buffer = calloc (1, sizeof (float));
+        b->buffer_length = sizeof (float);
+        break;
+
       case MYSQL_TYPE_DOUBLE:
-        b->buffer = calloc (sizeof (double), 1);
         b->buffer_type = MYSQL_TYPE_DOUBLE;
+        b->buffer = calloc (1, sizeof (double));
         b->buffer_length = sizeof (double);
         break;
 
+      case MYSQL_TYPE_NEWDECIMAL:
       case MYSQL_TYPE_STRING:
       case MYSQL_TYPE_VAR_STRING:
       case MYSQL_TYPE_VARCHAR:
       default:
         b->buffer_type = MYSQL_TYPE_STRING;
-        /* Use field length from metadata, not params_bind which is for input */
         b->buffer_length = fld->length + 1;
-        b->buffer = calloc (b->buffer_length, 1);
+        b->buffer = calloc (1, b->buffer_length);
         break;
       }
 
       if (NULL == b->buffer)
       {
-        dbh->status
-          = scm_cons (scm_from_int (1),
-                      scm_from_utf8_string ("result bind: out of memory"));
+        dbh->status = scm_cons (scm_from_int (1), scm_from_utf8_string ("result bind: out of memory"));
         goto cleanup_result_bind;
       }
     }
 
     if (mysql_stmt_bind_result (mysqlP->stmt, mysqlP->result_bind) != 0)
     {
-      dbh->status = scm_cons (scm_from_int (1),
-                              scm_from_utf8_string ("result bind mismatch"));
+      dbh->status = scm_cons (scm_from_int (1), scm_from_utf8_string ("result bind mismatch"));
       goto cleanup_stmt;
     }
   }
