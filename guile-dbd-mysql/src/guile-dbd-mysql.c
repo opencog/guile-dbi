@@ -71,21 +71,16 @@ typedef struct
 
 static void free_binds (MYSQL_BIND *binds, int cnt)
 {
-  int i;
+  if (NULL == binds)
+    return;
 
-  if (binds)
+  for (int i = 0; i < cnt; i++)
   {
-    for (i = 0; i < cnt; i++)
-    {
-      if (binds[i].buffer)
-      {
-        free (binds[i].buffer);
-      }
-    }
-
-    free (binds);
-    binds = NULL;
+    if (binds[i].buffer)
+      free (binds[i].buffer);
   }
+
+  free (binds);
 }
 
 void __mysql_make_g_db_handle (gdbi_db_handle_t *dbh)
