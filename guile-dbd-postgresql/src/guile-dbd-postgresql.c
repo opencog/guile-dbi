@@ -42,7 +42,13 @@ typedef struct
   PGresult *res;
   int lget;
   int retn;
+  int is_params; /* 1 = came from PQexecParams, 0 = came from PQexec */
 } gdbi_pgsql_ds_t;
+
+static void dbi_set_error (gdbi_db_handle_t *dbh, const char *msg)
+{
+  dbh->status = scm_cons (scm_from_int (1), scm_from_utf8_string (msg));
+}
 
 void __postgresql_make_g_db_handle (gdbi_db_handle_t *dbh)
 {
@@ -218,7 +224,6 @@ void __postgresql_close_g_db_handle (gdbi_db_handle_t *dbh)
 void __postgresql_query_g_db_handle (gdbi_db_handle_t *dbh, char *query)
 {
   gdbi_pgsql_ds_t *pgsqlP = NULL;
-  int err, i, bpid;
 
   if (dbh->db_info == NULL)
   {
@@ -236,42 +241,38 @@ void __postgresql_query_g_db_handle (gdbi_db_handle_t *dbh, char *query)
 
   pgsqlP = (gdbi_pgsql_ds_t *)dbh->db_info;
 
-  /* read up all results before next query */
-
-  do
+  /* clear any previous result */
+  if (pgsqlP->res)
   {
-    if (pgsqlP->res)
-    {
-      PQclear (pgsqlP->res);
-      pgsqlP->res = NULL;
-    }
-  } while ((pgsqlP->res = PQgetResult (pgsqlP->pgsql)) != NULL);
+    PQclear (pgsqlP->res);
+    pgsqlP->res = NULL;
+  }
 
-#if 0
-  if (PQresultStatus(pgsqlP->res) == PGRES_FATAL_ERROR)
-    {
-      for (i = 0, bpid=0; i < pgsqlP->retn && bpid == 0; i++)
-        {
-          PQreset(pgsqlP->pgsql);
-          bpid = PQbackendPID(pgsqlP->pgsql);
-        }
-    }
-#endif
-  err = PQsendQuery (pgsqlP->pgsql, query);
+  pgsqlP->res = PQexec (pgsqlP->pgsql, query);
+  pgsqlP->lget = 0;
+  pgsqlP->is_params = 0;
 
-  if (err == 1)
+  if (NULL == pgsqlP->res)
+  {
+    dbi_set_error (dbh, PQerrorMessage (pgsqlP->pgsql));
+    return;
+  }
+
+  ExecStatusType st = PQresultStatus (pgsqlP->res);
+  if (st == PGRES_COMMAND_OK || st == PGRES_TUPLES_OK)
   {
     dbh->status
       = scm_cons (scm_from_int (0), scm_from_utf8_string ("query ok"));
-    pgsqlP->lget = 0;
   }
   else
   {
-    dbh->status
-      = scm_cons (scm_from_int (1),
-                  scm_from_locale_string (PQerrorMessage (pgsqlP->pgsql)));
+    dbi_set_error (dbh, PQresultErrorMessage (pgsqlP->res));
+    PQclear (pgsqlP->res);
+    pgsqlP->res = NULL;
   }
 }
+
+static SCM getrow_for_params (gdbi_db_handle_t *dbh); /* defined below */
 
 SCM __postgresql_getrow_g_db_handle (gdbi_db_handle_t *dbh)
 {
@@ -287,26 +288,29 @@ SCM __postgresql_getrow_g_db_handle (gdbi_db_handle_t *dbh)
   }
 
   pgsqlP = (gdbi_pgsql_ds_t *)dbh->db_info;
-  if (NULL == pgsqlP->res)
-    pgsqlP->res = PQgetResult (pgsqlP->pgsql);
 
+  /* dispatch to params path */
+  if (pgsqlP->is_params)
+    return getrow_for_params (dbh);
+
+  /* ---- PQexec path ---- */
+
+  /* res is already populated by __postgresql_query_g_db_handle (PQexec).
+     The old lazy PQgetResult call is removed — it was only needed for the
+     old async PQsendQuery path which is now gone. */
   if (NULL == pgsqlP->res)
   {
     dbh->status = scm_cons (scm_from_int (0), scm_from_utf8_string ("row end"));
-    pgsqlP->lget = 0;
     return SCM_BOOL_F;
   }
 
-  if (pgsqlP->lget == PQntuples (pgsqlP->res))
+  if (pgsqlP->lget >= PQntuples (pgsqlP->res))
   {
     pgsqlP->lget = 0;
     PQclear (pgsqlP->res);
-    pgsqlP->res = PQgetResult (pgsqlP->pgsql);
-    if (NULL == pgsqlP->res)
-    {
-      dbh->status = scm_cons (scm_from_int (0), scm_from_utf8_string ("row end"));
-      return SCM_BOOL_F;
-    }
+    pgsqlP->res = NULL;
+    dbh->status = scm_cons (scm_from_int (0), scm_from_utf8_string ("row end"));
+    return SCM_BOOL_F;
   }
 
   switch (PQresultStatus (pgsqlP->res))
@@ -314,17 +318,9 @@ SCM __postgresql_getrow_g_db_handle (gdbi_db_handle_t *dbh)
   case PGRES_BAD_RESPONSE:
   case PGRES_NONFATAL_ERROR:
   case PGRES_FATAL_ERROR:
-    if (pgsqlP->res == NULL)
-    {
-      dbh->status
-        = scm_cons (scm_from_int (0), scm_from_utf8_string ("row end"));
-    }
-    else
-    {
-      dbh->status = scm_cons (
-        scm_from_int (1),
-        scm_from_locale_string (PQresStatus (PQresultStatus (pgsqlP->res))));
-    }
+    dbh->status = scm_cons (
+      scm_from_int (1),
+      scm_from_locale_string (PQresStatus (PQresultStatus (pgsqlP->res))));
     return SCM_BOOL_F;
 
   case PGRES_EMPTY_QUERY:
@@ -417,11 +413,6 @@ SCM __postgresql_getrow_g_db_handle (gdbi_db_handle_t *dbh)
   if (retrow == SCM_EOL)
     retrow = SCM_BOOL_F;
   return retrow;
-}
-
-static void dbi_set_error (gdbi_db_handle_t *dbh, const char *msg)
-{
-  dbh->status = scm_cons (scm_from_int (1), scm_from_utf8_string (msg));
 }
 
 void __postgresql_params_query_g_db_handle (gdbi_db_handle_t *g_db_handle,
