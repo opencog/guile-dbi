@@ -25,6 +25,8 @@ ACLOCAL_AMFLAGS = -I m4
 AUTOMAKE_OPTIONS = gnu
 SUBDIRS = src
 
+MAKEFLAGS = --no-print-directory
+
 EXTRA_DIST= autogen.sh \
 	test/test-guile-dbd-postgresql.scm
 

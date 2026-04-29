@@ -28,6 +28,8 @@ if HAVE_MAKEINFO
 	SUBDIRS += doc
 endif
 
+MAKEFLAGS = --no-print-directory
+
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = guile-dbi.pc
 
