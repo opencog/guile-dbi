@@ -278,8 +278,18 @@ static SCM getrow_for_params (gdbi_db_handle_t *dbh)
   SCM retrow = SCM_EOL;
   int fnum, f;
 
-  if (NULL == pgsqlP->res || pgsqlP->lget >= PQntuples (pgsqlP->res))
+  if (NULL == pgsqlP->res)
   {
+    dbh->status = scm_cons (scm_from_int (0), scm_from_utf8_string ("row end"));
+    return SCM_BOOL_F;
+  }
+
+  if (pgsqlP->lget >= PQntuples (pgsqlP->res))
+  {
+    PQclear (pgsqlP->res);
+    pgsqlP->res = NULL;
+    pgsqlP->lget = 0;
+    pgsqlP->is_params = 0;
     dbh->status = scm_cons (scm_from_int (0), scm_from_utf8_string ("row end"));
     return SCM_BOOL_F;
   }
