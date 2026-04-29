@@ -712,8 +712,13 @@ cleanup:
     snprintf (errbuf, sizeof (errbuf), "PostgreSQL execution failed: %s",
               PQerrorMessage (pgsqlP->pgsql));
     dbi_set_error (g_db_handle, errbuf);
-    pgsqlP->is_params = 0;
+    if (pgsqlP->res)
+    {
+      PQclear (pgsqlP->res);
+    }
     pgsqlP->res = NULL;
+    pgsqlP->lget = 0;
+    pgsqlP->is_params = 0;
     return;
   }
 
