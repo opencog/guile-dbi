@@ -222,7 +222,6 @@ void __postgresql_query_g_db_handle (gdbi_db_handle_t *dbh, char *query)
 
   if (dbh->db_info == NULL)
   {
-    /* todo: error msg to be translated */
     dbh->status = scm_cons (scm_from_int (1),
                             scm_from_utf8_string ("invalid dbi connection"));
     return;
@@ -230,7 +229,6 @@ void __postgresql_query_g_db_handle (gdbi_db_handle_t *dbh, char *query)
 
   if (query == NULL)
   {
-    /* todo: error msg to be translated */
     dbh->status
       = scm_cons (scm_from_int (1), scm_from_utf8_string ("invalid dbi query"));
     return;
@@ -283,10 +281,9 @@ SCM __postgresql_getrow_g_db_handle (gdbi_db_handle_t *dbh)
 
   if (dbh->db_info == NULL)
   {
-    /* todo: error msg to be translated */
     dbh->status = scm_cons (scm_from_int (1),
                             scm_from_utf8_string ("invalid dbi connection"));
-    return (SCM_BOOL_F);
+    return SCM_BOOL_F;
   }
 
   pgsqlP = (gdbi_pgsql_ds_t *)dbh->db_info;
@@ -312,7 +309,6 @@ SCM __postgresql_getrow_g_db_handle (gdbi_db_handle_t *dbh)
     }
   }
 
-  /* Check result status before unpacking the data! */
   switch (PQresultStatus (pgsqlP->res))
   {
   case PGRES_BAD_RESPONSE:
@@ -352,9 +348,6 @@ SCM __postgresql_getrow_g_db_handle (gdbi_db_handle_t *dbh)
   {
     SCM value;
 
-    /* The different field types can be gotten by saying
-     * SELECT typname, oid from pg_type;
-     * They do not seem to be listed in any header files... */
     Oid type = PQftype (pgsqlP->res, f);
     if ((type >= 20 && type <= 24) || /* int2, int4, int8 */
         type == 26)                   /* oid */
@@ -495,19 +488,13 @@ void __postgresql_params_query_g_db_handle (gdbi_db_handle_t *g_db_handle,
                       values, lengths, formats, 0); /* text results */
 
 cleanup:
-
   for (int i = 0; i < argc; i++)
     if (values[i])
       free ((char *)values[i]);
 
   free (values);
-  values = NULL;
-
   free (lengths);
-  lengths = NULL;
-
   free (formats);
-  formats = NULL;
 
   if (NULL == res)
   {
