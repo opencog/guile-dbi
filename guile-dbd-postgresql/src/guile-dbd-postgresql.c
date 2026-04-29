@@ -358,15 +358,18 @@ static SCM getrow_for_params (gdbi_db_handle_t *dbh)
       char *end = strrchr (p, '}');
       if (end)
         *end = '\0';
-      char *tok = strrchr (p, ',');
       value = SCM_EOL;
-      while (tok)
+      if (p[0] != '\0')
       {
-        value = scm_cons (scm_from_int64 (atoll (tok + 1)), value);
-        *tok = '\0';
-        tok = strrchr (p, ',');
+        char *tok = strrchr (p, ',');
+        while (tok)
+        {
+          value = scm_cons (scm_from_int64 (atoll (tok + 1)), value);
+          *tok = '\0';
+          tok = strrchr (p, ',');
+        }
+        value = scm_cons (scm_from_int64 (atoll (p)), value);
       }
-      value = scm_cons (scm_from_int64 (atoll (p)), value);
       free (p);
       break;
     }
@@ -557,15 +560,18 @@ SCM __postgresql_getrow_g_db_handle (gdbi_db_handle_t *dbh)
       char *end = strrchr (p, '}');
       if (end)
         *end = '\0';
-      char *tok = strrchr (p, ',');
       value = SCM_EOL;
-      while (tok)
+      if (p[0] != '\0')
       {
-        value = scm_cons (scm_from_int64 (atoll (tok + 1)), value);
-        *tok = '\0';
-        tok = strrchr (p, ',');
+        char *tok = strrchr (p, ',');
+        while (tok)
+        {
+          value = scm_cons (scm_from_int64 (atoll (tok + 1)), value);
+          *tok = '\0';
+          tok = strrchr (p, ',');
+        }
+        value = scm_cons (scm_from_int64 (atoll (p)), value);
       }
-      value = scm_cons (scm_from_int64 (atoll (p)), value);
       free (p);
       break;
     }
