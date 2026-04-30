@@ -1,8 +1,9 @@
 Version 3.2.0 (2026-TBD)
 	* Add MySQL support for TINY, SHORT and LONGLONG types. (#19)
+	* Add Postgres support for assorted column types. (#20)
 
 Version 3.1.1 (2026-01-29)
-	* Add missing GUILE_SITE install bug - dbi.scm not installed.
+	* Fix missing GUILE_SITE install bug - dbi.scm not installed.
 	* Remove over-complex, error-prone versioning system.
 	* Port unit tests to srfi-64; fix unit test framework issues.
 	* Change makefiles to run the unit tests.
