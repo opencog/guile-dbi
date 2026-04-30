@@ -355,7 +355,7 @@ static SCM getrow_for_params (gdbi_db_handle_t *dbh)
       break;
 
     /* money → string */
-    case 790: /* money */
+    case MONEYOID:
       value = scm_from_locale_stringn (vstr, vlen);
       break;
 
@@ -393,7 +393,7 @@ static SCM getrow_for_params (gdbi_db_handle_t *dbh)
     /* text-like: char/name/text/bpchar/varchar →
        scm_from_locale_stringn, mirrors MySQL STRING/VAR_STRING */
     case CHAROID:
-    case 19: /* name */
+    case NAMEOID:
     case TEXTOID:
     case BPCHAROID:
     case VARCHAROID:
@@ -558,7 +558,7 @@ SCM __postgresql_getrow_g_db_handle (gdbi_db_handle_t *dbh)
         value = scm_from_double (0.0);
       break;
 
-    case 790: /* money */
+    case MONEYOID:
     case NUMERICOID:
       value = scm_from_locale_string (vstr);
       break;
@@ -595,7 +595,7 @@ SCM __postgresql_getrow_g_db_handle (gdbi_db_handle_t *dbh)
     }
 
     case CHAROID:
-    case 19: /* name */
+    case NAMEOID:
     case TEXTOID:
     case BPCHAROID:
     case VARCHAROID:
