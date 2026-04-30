@@ -25,6 +25,7 @@
 #include <guile-dbi/guile-dbi.h>
 #include <libguile.h>
 #include <libpq-fe.h>
+#include "pg_oid.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -317,52 +318,52 @@ static SCM getrow_for_params (gdbi_db_handle_t *dbh)
     switch (type)
     {
     /* bool → scm_from_bool, mirrors MYSQL_TYPE_TINY 1/0 */
-    case 16:
+    case BOOLOID:
       value = scm_from_bool (vstr[0] == 't');
       break;
 
     /* smallint → scm_from_int, mirrors MYSQL_TYPE_SHORT */
-    case 21:
+    case INT2OID:
       value = scm_from_int (atoi (vstr));
       break;
 
     /* integer / regproc / oid → scm_from_int, mirrors MYSQL_TYPE_LONG */
-    case 23:
-    case 24:
-    case 26:
+    case INT4OID:
+    case 24: /* regproc */
+    case 26: /* oid */
       value = scm_from_int (atoi (vstr));
       break;
 
     /* bigint → scm_from_int64, mirrors MYSQL_TYPE_LONGLONG */
-    case 20:
+    case INT8OID:
       value = scm_from_int64 (atoll (vstr));
       break;
 
     /* float4 → double, mirrors MYSQL_TYPE_FLOAT */
-    case 700:
+    case FLOAT4OID:
       value = scm_from_double (atof (vstr));
       break;
 
     /* float8 → double, mirrors MYSQL_TYPE_DOUBLE */
-    case 701:
+    case FLOAT8OID:
       value = scm_from_double (atof (vstr));
       break;
 
     /* numeric/decimal → string, mirrors MySQL stmt NEWDECIMAL as string */
-    case 1700:
+    case NUMERICOID:
       value = scm_from_locale_stringn (vstr, vlen);
       break;
 
     /* money → string */
-    case 790:
+    case 790: /* money */
       value = scm_from_locale_stringn (vstr, vlen);
       break;
 
     /* integer arrays → SCM list, mirrors no MySQL equivalent but
        keep consistent with PQexec path above */
-    case 1005: /* _int2 */
-    case 1007: /* _int4 */
-    case 1016: /* _int8 */
+    case INT2ARRAYOID: /* _int2 */
+    case INT4ARRAYOID: /* _int4 */
+    case INT8ARRAYOID: /* _int8 */
     {
       char *p = strdup (vstr + 1); /* skip '{' */
       char *end = strrchr (p, '}');
@@ -385,41 +386,41 @@ static SCM getrow_for_params (gdbi_db_handle_t *dbh)
     }
 
     /* bytea → raw string by length, mirrors MySQL BLOB */
-    case 17:
+    case BYTEAOID:
       value = scm_from_locale_stringn (vstr, vlen);
       break;
 
     /* text-like: char/name/text/bpchar/varchar →
        scm_from_locale_stringn, mirrors MySQL STRING/VAR_STRING */
-    case 18:
-    case 19:
-    case 25:
-    case 1042:
-    case 1043:
+    case CHAROID:
+    case 19: /* name */
+    case TEXTOID:
+    case BPCHAROID:
+    case VARCHAROID:
       value = scm_from_locale_stringn (vstr, vlen);
       break;
 
     /* date/time/timestamp → string, mirrors MySQL stmt path which
        returns string (not strptime — that is only in MySQL legacy path) */
-    case 702:
-    case 1082:
-    case 1083:
-    case 1114:
-    case 1184:
-    case 1266:
+    case 702: /* abstime (deprecated) */
+    case DATEOID:
+    case TIMEOID:
+    case TIMESTAMPOID:
+    case TIMESTAMPTZOID:
+    case 1266: /* timetz */
       value = scm_from_locale_stringn (vstr, vlen);
       break;
 
     /* bit/varbit → string */
-    case 1560:
-    case 1562:
+    case 1560: /* bit */
+    case 1562: /* varbit */
       value = scm_from_locale_stringn (vstr, vlen);
       break;
 
     /* uuid/json/jsonb → string */
-    case 2950:
-    case 114:
-    case 3802:
+    case UUIDOID:
+    case JSONOID:
+    case JSONBOID:
       value = scm_from_locale_stringn (vstr, vlen);
       break;
 
@@ -535,36 +536,36 @@ SCM __postgresql_getrow_g_db_handle (gdbi_db_handle_t *dbh)
 
     switch (type)
     {
-    case 16:
+    case BOOLOID:
       value = scm_from_bool (vstr[0] == 't');
       break;
 
-    case 20:
+    case INT8OID:
       value = scm_from_int64 (atoll (vstr));
       break;
 
-    case 21:
-    case 23:
-    case 24:
-    case 26:
+    case INT2OID:
+    case INT4OID:
+    case 24: /* regproc */
+    case 26: /* oid */
       value = scm_from_int (atoi (vstr));
       break;
 
-    case 700:
-    case 701:
+    case FLOAT4OID:
+    case FLOAT8OID:
       value = scm_c_locale_stringn_to_number (vstr, strlen (vstr), 10);
       if (scm_is_false (value))
         value = scm_from_double (0.0);
       break;
 
-    case 790:
-    case 1700:
+    case 790: /* money */
+    case NUMERICOID:
       value = scm_from_locale_string (vstr);
       break;
 
-    case 1005:
-    case 1007:
-    case 1016:
+    case INT2ARRAYOID:
+    case INT4ARRAYOID:
+    case INT8ARRAYOID:
     {
       char *p = strdup (vstr + 1);
       char *end = strrchr (p, '}');
@@ -586,35 +587,35 @@ SCM __postgresql_getrow_g_db_handle (gdbi_db_handle_t *dbh)
       break;
     }
 
-    case 17:
+    case BYTEAOID:
     {
       size_t len = PQgetlength (pgsqlP->res, pgsqlP->lget, f);
       value = scm_from_locale_stringn (vstr, len);
       break;
     }
 
-    case 18:
-    case 19:
-    case 25:
-    case 1042:
-    case 1043:
+    case CHAROID:
+    case 19: /* name */
+    case TEXTOID:
+    case BPCHAROID:
+    case VARCHAROID:
       value = scm_from_locale_string (vstr);
       break;
 
-    case 702:
-    case 1082:
-    case 1083:
-    case 1114:
-    case 1184:
-    case 1266:
-    case 1560:
-    case 1562:
+    case 702: /* abstime (deprecated) */
+    case DATEOID:
+    case TIMEOID:
+    case TIMESTAMPOID:
+    case TIMESTAMPTZOID:
+    case 1266: /* timetz */
+    case 1560: /* bit */
+    case 1562: /* varbit */
       value = scm_from_locale_string (vstr);
       break;
 
-    case 2950:
-    case 114:
-    case 3802:
+    case UUIDOID:
+    case JSONOID:
+    case JSONBOID:
       value = scm_from_locale_string (vstr);
       break;
 
