@@ -25,6 +25,7 @@
 #include <guile-dbi/guile-dbi.h>
 #include <libguile.h>
 #include <libpq-fe.h>
+#include "pg_oid.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -42,7 +43,13 @@ typedef struct
   PGresult *res;
   int lget;
   int retn;
+  int is_params; /* 1 = came from PQexecParams, 0 = came from PQexec */
 } gdbi_pgsql_ds_t;
+
+static void dbi_set_error (gdbi_db_handle_t *dbh, const char *msg)
+{
+  dbh->status = scm_cons (scm_from_int (1), scm_from_utf8_string (msg));
+}
 
 void __postgresql_make_g_db_handle (gdbi_db_handle_t *dbh)
 {
@@ -218,11 +225,9 @@ void __postgresql_close_g_db_handle (gdbi_db_handle_t *dbh)
 void __postgresql_query_g_db_handle (gdbi_db_handle_t *dbh, char *query)
 {
   gdbi_pgsql_ds_t *pgsqlP = NULL;
-  int err, i, bpid;
 
   if (dbh->db_info == NULL)
   {
-    /* todo: error msg to be translated */
     dbh->status = scm_cons (scm_from_int (1),
                             scm_from_utf8_string ("invalid dbi connection"));
     return;
@@ -230,7 +235,6 @@ void __postgresql_query_g_db_handle (gdbi_db_handle_t *dbh, char *query)
 
   if (query == NULL)
   {
-    /* todo: error msg to be translated */
     dbh->status
       = scm_cons (scm_from_int (1), scm_from_utf8_string ("invalid dbi query"));
     return;
@@ -238,41 +242,213 @@ void __postgresql_query_g_db_handle (gdbi_db_handle_t *dbh, char *query)
 
   pgsqlP = (gdbi_pgsql_ds_t *)dbh->db_info;
 
-  /* read up all results before next query */
-
-  do
+  /* clear any previous result */
+  if (pgsqlP->res)
   {
-    if (pgsqlP->res)
-    {
-      PQclear (pgsqlP->res);
-      pgsqlP->res = NULL;
-    }
-  } while ((pgsqlP->res = PQgetResult (pgsqlP->pgsql)) != NULL);
+    PQclear (pgsqlP->res);
+    pgsqlP->res = NULL;
+  }
 
-#if 0
-  if (PQresultStatus(pgsqlP->res) == PGRES_FATAL_ERROR)
-    {
-      for (i = 0, bpid=0; i < pgsqlP->retn && bpid == 0; i++)
-        {
-          PQreset(pgsqlP->pgsql);
-          bpid = PQbackendPID(pgsqlP->pgsql);
-        }
-    }
-#endif
-  err = PQsendQuery (pgsqlP->pgsql, query);
+  pgsqlP->res = PQexec (pgsqlP->pgsql, query);
+  pgsqlP->lget = 0;
+  pgsqlP->is_params = 0;
 
-  if (err == 1)
+  if (NULL == pgsqlP->res)
+  {
+    dbi_set_error (dbh, PQerrorMessage (pgsqlP->pgsql));
+    return;
+  }
+
+  ExecStatusType st = PQresultStatus (pgsqlP->res);
+  if (st == PGRES_COMMAND_OK || st == PGRES_TUPLES_OK)
   {
     dbh->status
       = scm_cons (scm_from_int (0), scm_from_utf8_string ("query ok"));
-    pgsqlP->lget = 0;
   }
   else
   {
-    dbh->status
-      = scm_cons (scm_from_int (1),
-                  scm_from_locale_string (PQerrorMessage (pgsqlP->pgsql)));
+    dbi_set_error (dbh, PQresultErrorMessage (pgsqlP->res));
+    PQclear (pgsqlP->res);
+    pgsqlP->res = NULL;
   }
+}
+
+static SCM getrow_for_params (gdbi_db_handle_t *dbh)
+{
+  gdbi_pgsql_ds_t *pgsqlP = (gdbi_pgsql_ds_t *)dbh->db_info;
+  SCM retrow = SCM_EOL;
+  int fnum, f;
+
+  if (NULL == pgsqlP->res)
+  {
+    dbh->status = scm_cons (scm_from_int (0), scm_from_utf8_string ("row end"));
+    return SCM_BOOL_F;
+  }
+
+  if (pgsqlP->lget >= PQntuples (pgsqlP->res))
+  {
+    PQclear (pgsqlP->res);
+    pgsqlP->res = NULL;
+    pgsqlP->lget = 0;
+    pgsqlP->is_params = 0;
+    dbh->status = scm_cons (scm_from_int (0), scm_from_utf8_string ("row end"));
+    return SCM_BOOL_F;
+  }
+
+  fnum = PQnfields (pgsqlP->res);
+
+  for (f = 0; f < fnum; f++)
+  {
+    SCM value;
+    const char *fname = PQfname (pgsqlP->res, f);
+    Oid type = PQftype (pgsqlP->res, f);
+
+    /* NULL — mirrors MySQL getrow_for_stmt is_null[f] check */
+    if (PQgetisnull (pgsqlP->res, pgsqlP->lget, f))
+    {
+      value = SCM_UNSPECIFIED;
+      retrow = scm_append (scm_list_2 (
+        retrow, scm_list_1 (scm_cons (scm_from_locale_string (fname), value))));
+      continue;
+    }
+
+    const char *vstr = PQgetvalue (pgsqlP->res, pgsqlP->lget, f);
+    size_t vlen = PQgetlength (pgsqlP->res, pgsqlP->lget, f);
+
+    switch (type)
+    {
+    /* bool → scm_from_bool, mirrors MYSQL_TYPE_TINY 1/0 */
+    case BOOLOID:
+      value = scm_from_bool (vstr[0] == 't');
+      break;
+
+    /* smallint → scm_from_int, mirrors MYSQL_TYPE_SHORT */
+    case INT2OID:
+      value = scm_from_int (atoi (vstr));
+      break;
+
+    /* integer / regproc / oid → scm_from_int, mirrors MYSQL_TYPE_LONG */
+    case INT4OID:
+    case 24: /* regproc */
+    case 26: /* oid */
+      value = scm_from_int (atoi (vstr));
+      break;
+
+    /* bigint → scm_from_int64, mirrors MYSQL_TYPE_LONGLONG */
+    case INT8OID:
+      value = scm_from_int64 (atoll (vstr));
+      break;
+
+    /* float4 → double, mirrors MYSQL_TYPE_FLOAT */
+    case FLOAT4OID:
+      value = scm_from_double (atof (vstr));
+      break;
+
+    /* float8 → double, mirrors MYSQL_TYPE_DOUBLE */
+    case FLOAT8OID:
+      value = scm_from_double (atof (vstr));
+      break;
+
+    /* numeric/decimal → string, mirrors MySQL stmt NEWDECIMAL as string */
+    case NUMERICOID:
+      value = scm_from_locale_stringn (vstr, vlen);
+      break;
+
+    /* money → string */
+    case 790: /* money */
+      value = scm_from_locale_stringn (vstr, vlen);
+      break;
+
+    /* integer arrays → SCM list, mirrors no MySQL equivalent but
+       keep consistent with PQexec path above */
+    case INT2ARRAYOID: /* _int2 */
+    case INT4ARRAYOID: /* _int4 */
+    case INT8ARRAYOID: /* _int8 */
+    {
+      char *p = strdup (vstr + 1); /* skip '{' */
+      char *end = strrchr (p, '}');
+      if (end)
+        *end = '\0';
+      value = SCM_EOL;
+      if (p[0] != '\0')
+      {
+        char *tok = strrchr (p, ',');
+        while (tok)
+        {
+          value = scm_cons (scm_from_int64 (atoll (tok + 1)), value);
+          *tok = '\0';
+          tok = strrchr (p, ',');
+        }
+        value = scm_cons (scm_from_int64 (atoll (p)), value);
+      }
+      free (p);
+      break;
+    }
+
+    /* bytea → raw string by length, mirrors MySQL BLOB */
+    case BYTEAOID:
+      value = scm_from_locale_stringn (vstr, vlen);
+      break;
+
+    /* text-like: char/name/text/bpchar/varchar →
+       scm_from_locale_stringn, mirrors MySQL STRING/VAR_STRING */
+    case CHAROID:
+    case 19: /* name */
+    case TEXTOID:
+    case BPCHAROID:
+    case VARCHAROID:
+      value = scm_from_locale_stringn (vstr, vlen);
+      break;
+
+    /* date/time/timestamp → string, mirrors MySQL stmt path which
+       returns string (not strptime — that is only in MySQL legacy path) */
+    case 702: /* abstime (deprecated) */
+    case DATEOID:
+    case TIMEOID:
+    case TIMESTAMPOID:
+    case TIMESTAMPTZOID:
+    case 1266: /* timetz */
+      value = scm_from_locale_stringn (vstr, vlen);
+      break;
+
+    /* bit/varbit → string */
+    case 1560: /* bit */
+    case 1562: /* varbit */
+      value = scm_from_locale_stringn (vstr, vlen);
+      break;
+
+    /* uuid/json/jsonb → string */
+    case UUIDOID:
+    case JSONOID:
+    case JSONBOID:
+      value = scm_from_locale_stringn (vstr, vlen);
+      break;
+
+    default:
+    {
+      char msg[101];
+      snprintf (msg, 100, "unknown field type %d for %s", type, fname);
+      dbh->status = scm_cons (scm_from_int (1), scm_from_utf8_string (msg));
+      pgsqlP->lget++;
+      return SCM_BOOL_F;
+    }
+    }
+
+    retrow = scm_append (scm_list_2 (
+      retrow, scm_list_1 (scm_cons (scm_from_locale_string (fname), value))));
+  }
+
+  pgsqlP->lget++;
+
+  if (retrow == SCM_EOL)
+  {
+    dbh->status = scm_cons (scm_from_int (0), scm_from_utf8_string ("row end"));
+    return SCM_BOOL_F;
+  }
+
+  dbh->status
+    = scm_cons (scm_from_int (0), scm_from_utf8_string ("row fetched"));
+  return retrow;
 }
 
 SCM __postgresql_getrow_g_db_handle (gdbi_db_handle_t *dbh)
@@ -283,52 +459,45 @@ SCM __postgresql_getrow_g_db_handle (gdbi_db_handle_t *dbh)
 
   if (dbh->db_info == NULL)
   {
-    /* todo: error msg to be translated */
     dbh->status = scm_cons (scm_from_int (1),
                             scm_from_utf8_string ("invalid dbi connection"));
-    return (SCM_BOOL_F);
-  }
-
-  pgsqlP = (gdbi_pgsql_ds_t *)dbh->db_info;
-  if (NULL == pgsqlP->res)
-    pgsqlP->res = PQgetResult (pgsqlP->pgsql);
-
-  if (NULL == pgsqlP->res)
-  {
-    dbh->status = scm_cons (scm_from_int (0), scm_from_utf8_string ("row end"));
-    pgsqlP->lget = 0;
     return SCM_BOOL_F;
   }
 
-  if (pgsqlP->lget == PQntuples (pgsqlP->res))
+  pgsqlP = (gdbi_pgsql_ds_t *)dbh->db_info;
+
+  /* dispatch to params path */
+  if (pgsqlP->is_params)
+    return getrow_for_params (dbh);
+
+  /* ---- PQexec path ---- */
+
+  /* res is already populated by __postgresql_query_g_db_handle (PQexec).
+     The old lazy PQgetResult call is removed — it was only needed for the
+     old async PQsendQuery path which is now gone. */
+  if (NULL == pgsqlP->res)
+  {
+    dbh->status = scm_cons (scm_from_int (0), scm_from_utf8_string ("row end"));
+    return SCM_BOOL_F;
+  }
+
+  if (pgsqlP->lget >= PQntuples (pgsqlP->res))
   {
     pgsqlP->lget = 0;
     PQclear (pgsqlP->res);
-    pgsqlP->res = PQgetResult (pgsqlP->pgsql);
-    if (NULL == pgsqlP->res)
-    {
-      dbh->status = scm_cons (scm_from_int (0), scm_from_utf8_string ("row end"));
-      return SCM_BOOL_F;
-    }
+    pgsqlP->res = NULL;
+    dbh->status = scm_cons (scm_from_int (0), scm_from_utf8_string ("row end"));
+    return SCM_BOOL_F;
   }
 
-  /* Check result status before unpacking the data! */
   switch (PQresultStatus (pgsqlP->res))
   {
   case PGRES_BAD_RESPONSE:
   case PGRES_NONFATAL_ERROR:
   case PGRES_FATAL_ERROR:
-    if (pgsqlP->res == NULL)
-    {
-      dbh->status
-        = scm_cons (scm_from_int (0), scm_from_utf8_string ("row end"));
-    }
-    else
-    {
-      dbh->status = scm_cons (
-        scm_from_int (1),
-        scm_from_locale_string (PQresStatus (PQresultStatus (pgsqlP->res))));
-    }
+    dbh->status = scm_cons (
+      scm_from_int (1),
+      scm_from_locale_string (PQresStatus (PQresultStatus (pgsqlP->res))));
     return SCM_BOOL_F;
 
   case PGRES_EMPTY_QUERY:
@@ -348,87 +517,133 @@ SCM __postgresql_getrow_g_db_handle (gdbi_db_handle_t *dbh)
   }
 
   fnum = PQnfields (pgsqlP->res);
+
   for (f = 0; f < fnum; f++)
   {
     SCM value;
-
-    /* The different field types can be gotten by saying
-     * SELECT typname, oid from pg_type;
-     * They do not seem to be listed in any header files... */
     Oid type = PQftype (pgsqlP->res, f);
-    if ((type >= 20 && type <= 24) || /* int2, int4, int8 */
-        type == 26)                   /* oid */
+    const char *fname = PQfname (pgsqlP->res, f);
+
+    if (PQgetisnull (pgsqlP->res, pgsqlP->lget, f))
     {
-      const char *vstr = PQgetvalue (pgsqlP->res, pgsqlP->lget, f);
-      value = scm_from_long_long (atoll (vstr));
+      value = SCM_UNSPECIFIED;
+      retrow = scm_append (scm_list_2 (
+        retrow, scm_list_1 (scm_cons (scm_from_locale_string (fname), value))));
+      continue;
     }
-    else if (type == 700 ||  /* float4 */
-             type == 1700 || /* numeric */
-             type == 701)    /* float8 */
+
+    const char *vstr = PQgetvalue (pgsqlP->res, pgsqlP->lget, f);
+
+    switch (type)
     {
-      const char *vstr = PQgetvalue (pgsqlP->res, pgsqlP->lget, f);
-      if (vstr && *vstr)
-      {
-        value = scm_c_locale_stringn_to_number (vstr, strlen (vstr), 10);
-      }
-      else
-      {
+    case BOOLOID:
+      value = scm_from_bool (vstr[0] == 't');
+      break;
+
+    case INT8OID:
+      value = scm_from_int64 (atoll (vstr));
+      break;
+
+    case INT2OID:
+    case INT4OID:
+    case 24: /* regproc */
+    case 26: /* oid */
+      value = scm_from_int (atoi (vstr));
+      break;
+
+    case FLOAT4OID:
+    case FLOAT8OID:
+      value = scm_c_locale_stringn_to_number (vstr, strlen (vstr), 10);
+      if (scm_is_false (value))
         value = scm_from_double (0.0);
-      }
-    }
-    else if (type == 1005 || /* _int2  -- list of integers */
-             type == 1007 || /* _int4  -- list of integers */
-             type == 1016)   /* _int8  -- list of integers */
-    {
-      const char *vstr = PQgetvalue (pgsqlP->res, pgsqlP->lget, f);
-      char *p = strdup (vstr + 1);
-      char *tok = rindex (p, ',');
-      value = SCM_EOL;
-      while (tok)
-      {
-        SCM vtok = scm_from_long_long (atoll (tok + 1));
-        value = scm_cons (vtok, value);
-        *tok = 0x0;
-        tok = rindex (p, ',');
-      }
-      SCM vtok = scm_from_long_long (atoll (p));
-      value = scm_cons (vtok, value);
-      free (p);
-    }
-    else if (type == 18 ||                   /* char */
-             type == 19 ||                   /* name */
-             type == 25 ||                   /* text */
-             type == 702 ||                  /* abstime !!! XXX */
-             (type >= 1042 && type <= 1114)) /* varchar, timestamps */
-    {
-      const char *vstr = PQgetvalue (pgsqlP->res, pgsqlP->lget, f);
+      break;
+
+    case 790: /* money */
+    case NUMERICOID:
       value = scm_from_locale_string (vstr);
+      break;
+
+    case INT2ARRAYOID:
+    case INT4ARRAYOID:
+    case INT8ARRAYOID:
+    {
+      char *p = strdup (vstr + 1);
+      char *end = strrchr (p, '}');
+      if (end)
+        *end = '\0';
+      value = SCM_EOL;
+      if (p[0] != '\0')
+      {
+        char *tok = strrchr (p, ',');
+        while (tok)
+        {
+          value = scm_cons (scm_from_int64 (atoll (tok + 1)), value);
+          *tok = '\0';
+          tok = strrchr (p, ',');
+        }
+        value = scm_cons (scm_from_int64 (atoll (p)), value);
+      }
+      free (p);
+      break;
     }
-    else
+
+    case BYTEAOID:
+    {
+      size_t len = PQgetlength (pgsqlP->res, pgsqlP->lget, f);
+      value = scm_from_locale_stringn (vstr, len);
+      break;
+    }
+
+    case CHAROID:
+    case 19: /* name */
+    case TEXTOID:
+    case BPCHAROID:
+    case VARCHAROID:
+      value = scm_from_locale_string (vstr);
+      break;
+
+    case 702: /* abstime (deprecated) */
+    case DATEOID:
+    case TIMEOID:
+    case TIMESTAMPOID:
+    case TIMESTAMPTZOID:
+    case 1266: /* timetz */
+    case 1560: /* bit */
+    case 1562: /* varbit */
+      value = scm_from_locale_string (vstr);
+      break;
+
+    case UUIDOID:
+    case JSONOID:
+    case JSONBOID:
+      value = scm_from_locale_string (vstr);
+      break;
+
+    default:
     {
       char msg[101];
-      snprintf (msg, 100, "unknown field type %d for %s", type,
-                PQfname (pgsqlP->res, f));
+      snprintf (msg, 100, "unknown field type %d for %s", type, fname);
       dbh->status = scm_cons (scm_from_int (1), scm_from_utf8_string (msg));
       pgsqlP->lget++;
       return SCM_BOOL_F;
     }
+    }
 
     retrow = scm_append (scm_list_2 (
-      retrow, scm_list_1 (scm_cons (
-                scm_from_locale_string (PQfname (pgsqlP->res, f)), value))));
+      retrow, scm_list_1 (scm_cons (scm_from_locale_string (fname), value))));
   }
 
   pgsqlP->lget++;
 
   if (retrow == SCM_EOL)
-    retrow = SCM_BOOL_F;
-  return retrow;
-}
+  {
+    dbh->status = scm_cons (scm_from_int (0), scm_from_utf8_string ("row end"));
+    return SCM_BOOL_F;
+  }
 
-static void dbi_set_error (gdbi_db_handle_t *dbh, const char *msg)
-{
-  dbh->status = scm_cons (scm_from_int (1), scm_from_utf8_string (msg));
+  dbh->status
+    = scm_cons (scm_from_int (0), scm_from_utf8_string ("row fetched"));
+  return retrow;
 }
 
 void __postgresql_params_query_g_db_handle (gdbi_db_handle_t *g_db_handle,
@@ -495,31 +710,49 @@ void __postgresql_params_query_g_db_handle (gdbi_db_handle_t *g_db_handle,
                       values, lengths, formats, 0); /* text results */
 
 cleanup:
-
   for (int i = 0; i < argc; i++)
     if (values[i])
       free ((char *)values[i]);
 
   free (values);
-  values = NULL;
-
   free (lengths);
-  lengths = NULL;
-
   free (formats);
-  formats = NULL;
 
   if (NULL == res)
   {
     snprintf (errbuf, sizeof (errbuf), "PostgreSQL execution failed: %s",
               PQerrorMessage (pgsqlP->pgsql));
     dbi_set_error (g_db_handle, errbuf);
+    if (pgsqlP->res)
+    {
+      PQclear (pgsqlP->res);
+    }
+    pgsqlP->res = NULL;
+    pgsqlP->lget = 0;
+    pgsqlP->is_params = 0;
+    return;
   }
-  else
+
+  ExecStatusType st = PQresultStatus (res);
+  if (st == PGRES_COMMAND_OK || st == PGRES_TUPLES_OK)
   {
     g_db_handle->status
       = scm_cons (scm_from_int (0), scm_from_utf8_string ("query ok"));
+    pgsqlP->lget = 0;
+    pgsqlP->is_params = 1;
+    /* clear previous result before assigning new one */
+    if (pgsqlP->res)
+    {
+      PQclear (pgsqlP->res);
+    }
+    pgsqlP->res = res;
   }
-
-  pgsqlP->res = res;
+  else
+  {
+    dbi_set_error (g_db_handle, PQresultErrorMessage (res));
+    PQclear (res);
+    pgsqlP->res = NULL;
+    pgsqlP->lget = 0;
+    pgsqlP->is_params = 0;
+  }
 }
