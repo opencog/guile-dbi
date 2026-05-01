@@ -327,6 +327,9 @@ SCM __sqlite3_getrow_g_db_handle (gdbi_db_handle_t *dbh)
       }
 
       case SQLITE_NULL:
+        value = SCM_UNDEFINED; /* SQL NULL → unspecified, consistent with pg driver */
+        break;
+
       default:
         value = SCM_BOOL_F;
         break;
