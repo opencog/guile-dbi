@@ -25,6 +25,8 @@
 void __sqlite3_make_g_db_handle (gdbi_db_handle_t *dbh);
 void __sqlite3_close_g_db_handle (gdbi_db_handle_t *dbh);
 void __sqlite3_query_g_db_handle (gdbi_db_handle_t *dbh, char *query_str);
+void __sqlite3_params_query_g_db_handle (gdbi_db_handle_t *dbh, char *query,
+                                         int argc, SCM *argv);
 SCM __sqlite3_getrow_g_db_handle (gdbi_db_handle_t *dbh);
 SCM status_cons (int code, const char *message);
 
@@ -69,7 +71,7 @@ void __sqlite3_make_g_db_handle (gdbi_db_handle_t *dbh)
     return;
   }
 
-  char s = sqlite3_open (db_name, &(db_info->sqlite3_obj));
+  int s = sqlite3_open (db_name, &(db_info->sqlite3_obj));
   free (db_name);
   if (s != SQLITE_OK)
   {
@@ -207,7 +209,7 @@ void __sqlite3_query_g_db_handle (gdbi_db_handle_t *dbh, char *query_str)
   sqlite3_finalize (db_info->stmt);
   db_info->stmt = NULL;
   sqlite3_stmt *stmt;
-  char s
+  int s
     = sqlite3_prepare_v2 (db_info->sqlite3_obj, query_str, -1, &stmt, NULL);
   if (s != SQLITE_OK)
   {
