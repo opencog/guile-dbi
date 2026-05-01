@@ -142,6 +142,13 @@ void __sqlite3_params_query_g_db_handle (gdbi_db_handle_t *dbh, char *query,
 
   sqliteP->stmt = stmt;
 
+  // Verify parameter count matches
+  if (sqlite3_bind_parameter_count (stmt) != argc)
+  {
+    dbh->status = status_cons (1, "params count mismatch");
+    goto cleanup;
+  }
+
   // Bind parameters
   for (i = 0; i < argc; i++)
   {
@@ -252,15 +259,15 @@ void __sqlite3_query_g_db_handle (gdbi_db_handle_t *dbh, char *query_str)
 
 SCM __sqlite3_getrow_g_db_handle (gdbi_db_handle_t *dbh)
 {
-  gdbi_sqlite3_ds_t *sqliteP = (gdbi_sqlite3_ds_t *)dbh->db_info;
-  sqlite3 *db = sqliteP->sqlite3_obj;
-  SCM row = SCM_EOL;
-
-  if (NULL == dbh || NULL == sqliteP)
+  if (NULL == dbh->db_info)
   {
     dbh->status = status_cons (1, "invalid dbi connection");
     return SCM_BOOL_F;
   }
+
+  gdbi_sqlite3_ds_t *sqliteP = (gdbi_sqlite3_ds_t *)dbh->db_info;
+  sqlite3 *db = sqliteP->sqlite3_obj;
+  SCM row = SCM_EOL;
 
   if (NULL == sqliteP->stmt)
   {
