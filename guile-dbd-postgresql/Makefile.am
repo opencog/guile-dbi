@@ -28,7 +28,10 @@ SUBDIRS = src
 MAKEFLAGS = --no-print-directory
 
 EXTRA_DIST= autogen.sh \
-	test/test-guile-dbd-postgresql.scm
+	test/test-guile-dbd-postgresql.scm \
+	test/test-postgresql-params.scm
 
 check-local:
 	guile -s $(srcdir)/test/test-guile-dbd-postgresql.scm
+	guile -s $(srcdir)/test/test-postgresql-params.scm
+
