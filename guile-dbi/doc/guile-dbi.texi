@@ -82,7 +82,7 @@ by Free Software Foundation.
 @top Guile DBI Manual
 
 This reference manual documents Guile DBI, Guile Data Base Interface.
-It describes how to use Guile DBI and how to write new dbd database
+It describes how to use Guile DBI and how to write new DBD database
 drivers.
 
 This Info file contains edition @value{VERSION} of the reference
@@ -141,7 +141,7 @@ There are only 5 functions: @code{dbi-open},
 and @code{dbi-get_row}.
 
 @*
-Guile DBI supports any database for which a dbd backend is written.
+Guile DBI supports any database for which a DBD backend is written.
 Currently, these are MySQL, Postgres and SQLite.
 
 Here's an example usage, using SQLite3:
@@ -233,11 +233,11 @@ If successful, it returns a @code{db-handle} object which is to be
 used to reference the newly opened database connection. This object also
 contains result status.
 
-Every dbd implementation requires its own connection string format which
+Every DBD implementation requires its own connection string format which
 should be explained in its README file.
 
-For example, to connect to postgres, using TCP sockets, to the
-localhost, at the standard, default postgres port 5432:
+For example, to connect to Postgres, using TCP sockets, to the
+localhost, at the standard, default Postgres port 5432:
 @example
 (dbi-open "postgresql" "user:pass:database:tcp:localhost:5432")
 @end example
@@ -390,9 +390,9 @@ decremented until is 0.
 @node How to write plugins, , How plugins are loaded, Internals and Database Drivers
 @section How to write plugins
 
-Writing a plugin is fairly easy (have a look at the mysql, postgres or
+Writing a plugin is fairly easy (have a look at the mysql, Postgres or
 sqlite dbd source code). You will need to supply a few functions with
-appropriiately chosen names.
+appropriately chosen names.
 
 @*
 These are the functions and return types you should supply for
