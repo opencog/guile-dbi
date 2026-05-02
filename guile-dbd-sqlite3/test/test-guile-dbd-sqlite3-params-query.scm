@@ -1,7 +1,7 @@
 #!/usr/bin/env guile
 -s
 !#
-;;; test-guile-dbd-sqlite3-params.scm - Unit tests for guile-dbd-sqlite3 params API
+;;; test-guile-dbd-sqlite3-params-query.scm - Unit tests for guile-dbd-sqlite3 params API
 ;;;
 ;;; Copyright (C) 2026 Free Software Foundation, Inc.
 ;;;
@@ -168,7 +168,7 @@
 
 (define r3 (dbi-get_row db-obj))
 
-;; NOTE: Boolean false will be inexplicitly convert to 0, for SQLite3 has no
+;; NOTE: Boolean false will be inexplicitly converted to 0, for SQLite3 has no
 ;;       Boolean type. This test ensures that the conversion works as expected.
 (let ((v (cdr (assoc "name" r3))))
   (check "boolean false semantic"
