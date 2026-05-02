@@ -127,7 +127,7 @@ I now use it in one of my projects (the OpenCog NLP subsystem).>>
 @section Getting Guile DBI
 
 You can find the latest version of Guile DBI at its project page,
-@url{http://www.gna.org/projects/guile-dbi/}.
+@url{http://github.com/opencog/guile-dbi/}.
 
 @*
 In the file download area, there are dbi and driver tarballs.
