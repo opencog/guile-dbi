@@ -113,7 +113,6 @@ void __sqlite3_make_g_db_handle (gdbi_db_handle_t *dbh)
     return;
   }
 
-  char *db_name = scm_to_locale_string (dbh->constr);
   gdbi_sqlite3_ds_t *db_info = malloc (sizeof (gdbi_sqlite3_ds_t));
   if (db_info == NULL)
   {
@@ -121,6 +120,7 @@ void __sqlite3_make_g_db_handle (gdbi_db_handle_t *dbh)
     return;
   }
 
+  char *db_name = scm_to_locale_string (dbh->constr);
   int s = sqlite3_open (db_name, &(db_info->sqlite3_obj));
   free (db_name);
   if (s != SQLITE_OK)
@@ -181,9 +181,6 @@ void __sqlite3_params_query_g_db_handle(
     SCM *argv)
 {
     gdbi_sqlite3_ds_t *db_info = dbh->db_info;
-    sqlite3_stmt *stmt = NULL;
-    int rc;
-
     if (!db_info)
     {
         dbh->status = status_cons(1, "invalid dbi connection");
@@ -202,7 +199,8 @@ void __sqlite3_params_query_g_db_handle(
     db_info->cached_row = SCM_UNDEFINED;
 
     /* prepare */
-    rc = sqlite3_prepare_v2(db_info->sqlite3_obj, query, -1, &stmt, NULL);
+    sqlite3_stmt *stmt = NULL;
+    int rc = sqlite3_prepare_v2(db_info->sqlite3_obj, query, -1, &stmt, NULL);
     if (rc != SQLITE_OK)
     {
         dbh->status = status_cons(1, sqlite3_errmsg(db_info->sqlite3_obj));
@@ -258,10 +256,9 @@ void __sqlite3_params_query_g_db_handle(
     /* non-select or no row */
     if (rc == SQLITE_DONE)
     {
+        dbh->status = status_cons(0, "query ok");
         sqlite3_finalize(stmt);
         db_info->stmt = NULL;
-
-        dbh->status = status_cons(0, "query ok");
         return;
     }
 
@@ -289,8 +286,6 @@ error:
 void __sqlite3_query_g_db_handle (gdbi_db_handle_t *dbh, char *query_str)
 {
   gdbi_sqlite3_ds_t *db_info = dbh->db_info;
-  sqlite3_stmt *stmt = db_info->stmt;
-
   if (!db_info)
   {
     dbh->status = status_cons (1, "invalid dbi connection");
@@ -305,6 +300,7 @@ void __sqlite3_query_g_db_handle (gdbi_db_handle_t *dbh, char *query_str)
   }
 
   /* prepare the statement */
+  sqlite3_stmt *stmt = NULL;
   int rc
     = sqlite3_prepare_v2 (db_info->sqlite3_obj, query_str, -1, &stmt, NULL);
   if (rc != SQLITE_OK)
@@ -319,15 +315,12 @@ void __sqlite3_query_g_db_handle (gdbi_db_handle_t *dbh, char *query_str)
     /* If no result rows, execute and return immediately */
     rc = sqlite3_step (stmt);
     if (rc != SQLITE_DONE)
-    {
       dbh->status = status_cons (1, sqlite3_errmsg (db_info->sqlite3_obj));
-      sqlite3_finalize (stmt);
-      return;
-    }
+    else
+      dbh->status = status_cons (0, "query ok");
 
     sqlite3_finalize (stmt);
     db_info->stmt = NULL;
-    dbh->status = status_cons (0, "query ok");
     return;
   }
 
@@ -348,6 +341,7 @@ void __sqlite3_query_g_db_handle (gdbi_db_handle_t *dbh, char *query_str)
   /* Handle any other errors */
   dbh->status = status_cons (1, sqlite3_errmsg (db_info->sqlite3_obj));
   sqlite3_finalize (stmt);
+  db_info->stmt = NULL;
 }
 
 SCM __sqlite3_getrow_g_db_handle (gdbi_db_handle_t *dbh)
@@ -374,10 +368,9 @@ SCM __sqlite3_getrow_g_db_handle (gdbi_db_handle_t *dbh)
   /* END */
   if (SQLITE_DONE == rc)
   {
+    dbh->status = status_cons (0, "row end");
     sqlite3_finalize (stmt);
     p->stmt = NULL;
-
-    dbh->status = status_cons (0, "row end");
     return SCM_BOOL_F;
   }
 
