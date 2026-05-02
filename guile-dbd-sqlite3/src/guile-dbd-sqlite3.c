@@ -94,7 +94,7 @@ SCM convert_row (sqlite3_stmt *stmt)
     row = scm_cons (scm_cons (scm_from_locale_string (fname), value), row);
   }
 
-  return scm_reverse (row);
+  return scm_reverse_x (row, SCM_EOL);
 }
 
 SCM status_cons (int code, const char *message)
