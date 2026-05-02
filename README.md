@@ -2,7 +2,7 @@ Guile DBI
 =========
 
 **guile-dbi** provides a simple, generic, easy-to-use **guile scheme**
-interface to SQL databases, such as Postgres, MySQL or SQLite3.
+interface to SQL databases, such as Postgres, MariaDB/MySQL or SQLite3.
 
 The system is 'generic' in the sense that the same programming interface
 (front end) can be used with different databases. The DBI (database
@@ -20,7 +20,8 @@ example, SQL floating point columns are converted to scheme floating
 point numbers - but there is nothing fancier than this - there is no
 special treatment for dates, currencies, etc. At this time, there is no
 support for prepared statements. Capable programmers are invited to add
-support for this and other missing features.
+support for this and other missing features. Beginning programmers might
+want to take on some of the cleanup work listed in the issues.
 
 Someone clever might want to figure out how to replace the C code by
 generic FFI interfaces, so that there would not be any need at all for
@@ -29,7 +30,7 @@ so, for now, things seem OK.
 
 Status
 ------
-* '''Version 3.1.1''' -- stable, reliable, "feature complete".
+* *Version 3.1.1* -- stable, reliable, "feature complete".
 
 Documentation
 -------------
