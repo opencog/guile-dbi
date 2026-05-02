@@ -29,8 +29,10 @@ MAKEFLAGS = --no-print-directory
 
 EXTRA_DIST= autogen.sh \
 	test/test-guile-dbd-sqlite3.scm \
+	test/test-guile-dbd-sqlite3-params-query.scm \
 	test/valgrind.supp \
 	test/valgrind-test
 
 check-local:
 	guile -s $(srcdir)/test/test-guile-dbd-sqlite3.scm
+	guile -s $(srcdir)/test/test-guile-dbd-sqlite3-params-query.scm
