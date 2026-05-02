@@ -215,7 +215,7 @@ Login credentials for PostgreSQL work similarly:
 (use-modules (dbi dbi))
 
 (define conxion (dbi-open "postgresql" "user:pass:pluto:tcp:localhost:5432"))
-(define conxion (dbi-open "postgresql" "user:pass:pluto:socket:/var/run/posgresql"))
+(define conxion (dbi-open "postgresql" "user:pass:pluto:socket:/var/run/postgresql"))
 @end example
 
 
@@ -233,7 +233,7 @@ If successful, it returns a @code{db-handle} object which is to be
 used to reference the newly opened database connection. This object also
 contains result status.
 
-Every dbd implemention requires its own connection string format which
+Every dbd implementation requires its own connection string format which
 should be explained in its README file.
 
 For example, to connect to postgres, using TCP sockets, to the
@@ -268,7 +268,7 @@ handle object.
 @deffn Primitive dbi-get_row db-handle
 
 This function, called after dbi-query, returns @code{#f} if there isn't
-a next row to retrive; otherwise it returns a pair. The car of the
+a next row to retrieve; otherwise it returns a pair. The car of the
 pair contains the field name and cdr is it's value.
 
 Example:
@@ -321,7 +321,7 @@ typedef struct g_db_handle
 @itemize @bullet
 @item @code{bcknd} stores backend name (e.g. mysql, postgresql, sqlite, ...).
 @item @code{constr} string, stores the backend connection string. This
-is not touched by guile-dbi, but is passed ``as is'' to the databse plugin.
+is not touched by guile-dbi, but is passed ``as is'' to the database plugin.
 @item @code{status} this is a pair which is used to return information from
 backend to the dbi interface library. Its car is returns a status code number,
 cdr is a status return message.
@@ -405,7 +405,7 @@ a well written dbd:
 The ``bcknd'' is the name used by the open function.
 This function should parse the connection string
 and use params to connect to backend dbd database. Status should be
-set in dbh in order to return useful informations. Don't forget
+set in dbh in order to return useful information. Don't forget
 to set dbh field ``closed'' to false if connection is correctly established.
 @sp 1
 
