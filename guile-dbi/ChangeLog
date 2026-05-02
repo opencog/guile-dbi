@@ -1,6 +1,7 @@
 Version 3.2.0 (2026-TBD)
 	* Add MySQL support for TINY, SHORT and LONGLONG types. (#19)
 	* Add Postgres support for assorted column types. (#20)
+	* Update sqlite3 support. (#23)
 
 Version 3.1.1 (2026-01-29)
 	* Fix missing GUILE_SITE install bug - dbi.scm not installed.
