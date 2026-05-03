@@ -193,15 +193,15 @@ PostgreSQL.
 ;; Insert rows using parameterized queries.
 ;; Values are passed as extra arguments after the SQL string.
 (dbi-params-query db-obj
-  "insert into hellotable (id, name) values (?, ?)" 33 "ola")
+  "insert into hellotable (id, name) values (?, ?)" '(33 "ola"))
 (dbi-params-query db-obj
-  "insert into hellotable (id, name) values (?, ?)" 34 "dzien dobre")
+  "insert into hellotable (id, name) values (?, ?)" '(34 "dzien dobre"))
 (dbi-params-query db-obj
-  "insert into hellotable (id, name) values (?, ?)" 44 "annyong haseyo")
+  "insert into hellotable (id, name) values (?, ?)" '(44 "annyong haseyo"))
 
 ;; Query with a parameter in the WHERE clause.
 (dbi-params-query db-obj
-  "select * from hellotable where id > ?" 30)
+  "select * from hellotable where id > ?" '(30))
 (let loop ((row (dbi-get_row db-obj)))
   (when row
     (display row) (newline)
@@ -321,7 +321,7 @@ call succeeded before attempting to fetch rows.
 Example with SQLite3 / MySQL (@code{?} placeholders):
 @example
 (dbi-params-query db
-  "insert into users (name, age) values (?, ?)" "alice" 30)
+  "insert into users (name, age) values (?, ?)" '("alice" 30))
 
 (dbi-params-query db
   "select * from users where age > ?" 18)
@@ -333,7 +333,7 @@ Example with SQLite3 / MySQL (@code{?} placeholders):
 Example with PostgreSQL (@code{$N} placeholders):
 @example
 (dbi-params-query db
-  "select * from users where age > $1 and active = $2" 18 #t)
+  "select * from users where age > $1 and active = $2" '(18 #t))
 @end example
 
 @end deffn
