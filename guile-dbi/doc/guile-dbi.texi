@@ -289,13 +289,16 @@ Example:
 @end deffn
 
 
-@deffn Primitive dbi-params-query db-handle query param @dots{}
+@deffn Primitive dbi-params-query db-handle query params
 
-Prepare @var{query} as a parameterized SQL statement, bind each
-@var{param} argument to its corresponding placeholder, then execute
+Prepare @var{query} as a parameterized SQL statement, bind each element
+of @var{params} (a list) to its corresponding placeholder, then execute
 the statement.  This is the recommended way to pass user-supplied
 values to the database because the driver handles all quoting and
 escaping, eliminating SQL-injection risk.
+
+@var{params} must be a Scheme list even when there is only one
+parameter.  Pass @code{'()} when the query has no placeholders.
 
 @var{query} must use the placeholder syntax of the target database:
 @itemize @bullet
@@ -304,8 +307,8 @@ escaping, eliminating SQL-injection risk.
 @item @strong{PostgreSQL}: @code{$1}, @code{$2}, @dots{} (numbered)
 @end itemize
 
-Each @var{param} is a Scheme value.  Supported types and their SQL
-mapping:
+Each element of @var{params} is a Scheme value.  Supported types
+and their SQL mapping:
 @multitable @columnfractions 0.3 0.7
 @headitem Scheme type @tab SQL binding
 @item boolean (@code{#t}/@code{#f}) @tab integer 1 / 0 (SQLite3, MySQL) or boolean (PostgreSQL)
@@ -318,13 +321,18 @@ mapping:
 Use @code{dbi-get_status} immediately after to check whether the
 call succeeded before attempting to fetch rows.
 
+Note: although the underlying driver receives parameters as a C
+@code{argc}/@code{argv} array, the Scheme-level API takes a single
+list argument.  The guile-dbi core converts the list before calling
+the driver.
+
 Example with SQLite3 / MySQL (@code{?} placeholders):
 @example
 (dbi-params-query db
   "insert into users (name, age) values (?, ?)" '("alice" 30))
 
 (dbi-params-query db
-  "select * from users where age > ?" 18)
+  "select * from users where age > ?" (list 18))
 (let loop ((row (dbi-get_row db)))
   (when row (display row) (newline)
             (loop (dbi-get_row db))))
