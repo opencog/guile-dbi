@@ -136,9 +136,9 @@ In the file download area, there are dbi and driver tarballs.
 @chapter Tutorial
 
 The Scheme interface is very simple.
-There are only 5 functions: @code{dbi-open},
-@code{dbi-close}, @code{dbi-query}, @code{dbi-get_status}
-and @code{dbi-get_row}.
+There are only 6 functions: @code{dbi-open},
+@code{dbi-close}, @code{dbi-query}, @code{dbi-params-query},
+@code{dbi-get_status} and @code{dbi-get_row}.
 
 @*
 Guile DBI supports any database for which a DBD backend is written.
@@ -175,6 +175,39 @@ Here's an example usage, using SQLite3:
 (dbi-close db-obj)
 (display db-obj) (newline)
 
+@end example
+
+The same example rewritten to use @code{dbi-params-query} with
+parameterized queries.  Parameter placeholders use the driver-native
+syntax: @code{?} for SQLite3 and MySQL, @code{$1 $2 @dots{}} for
+PostgreSQL.
+
+@example
+(use-modules (dbi dbi))
+
+(define db-obj (dbi-open "sqlite3" "my-example-db"))
+
+;; Create a table (no parameters needed here).
+(dbi-query db-obj "create table hellotable(id int, name varchar(15))")
+
+;; Insert rows using parameterized queries.
+;; Values are passed as extra arguments after the SQL string.
+(dbi-params-query db-obj
+  "insert into hellotable (id, name) values (?, ?)" 33 "ola")
+(dbi-params-query db-obj
+  "insert into hellotable (id, name) values (?, ?)" 34 "dzien dobre")
+(dbi-params-query db-obj
+  "insert into hellotable (id, name) values (?, ?)" 44 "annyong haseyo")
+
+;; Query with a parameter in the WHERE clause.
+(dbi-params-query db-obj
+  "select * from hellotable where id > ?" 30)
+(let loop ((row (dbi-get_row db-obj)))
+  (when row
+    (display row) (newline)
+    (loop (dbi-get_row db-obj))))
+
+(dbi-close db-obj)
 @end example
 
 Here's another example, using the MySQL database. This example assumes
@@ -256,6 +289,56 @@ Example:
 @end deffn
 
 
+@deffn Primitive dbi-params-query db-handle query param @dots{}
+
+Prepare @var{query} as a parameterized SQL statement, bind each
+@var{param} argument to its corresponding placeholder, then execute
+the statement.  This is the recommended way to pass user-supplied
+values to the database because the driver handles all quoting and
+escaping, eliminating SQL-injection risk.
+
+@var{query} must use the placeholder syntax of the target database:
+@itemize @bullet
+@item @strong{SQLite3}: @code{?} (positional)
+@item @strong{MySQL}: @code{?} (positional)
+@item @strong{PostgreSQL}: @code{$1}, @code{$2}, @dots{} (numbered)
+@end itemize
+
+Each @var{param} is a Scheme value.  Supported types and their SQL
+mapping:
+@multitable @columnfractions 0.3 0.7
+@headitem Scheme type @tab SQL binding
+@item boolean (@code{#t}/@code{#f}) @tab integer 1 / 0 (SQLite3, MySQL) or boolean (PostgreSQL)
+@item exact integer @tab INTEGER / BIGINT
+@item inexact real @tab FLOAT / DOUBLE (MySQL, SQLite3) or text representation (PostgreSQL)
+@item string @tab TEXT / VARCHAR
+@item @code{'()} (null list) @tab SQL NULL
+@end multitable
+
+Use @code{dbi-get_status} immediately after to check whether the
+call succeeded before attempting to fetch rows.
+
+Example with SQLite3 / MySQL (@code{?} placeholders):
+@example
+(dbi-params-query db
+  "insert into users (name, age) values (?, ?)" "alice" 30)
+
+(dbi-params-query db
+  "select * from users where age > ?" 18)
+(let loop ((row (dbi-get_row db)))
+  (when row (display row) (newline)
+            (loop (dbi-get_row db))))
+@end example
+
+Example with PostgreSQL (@code{$N} placeholders):
+@example
+(dbi-params-query db
+  "select * from users where age > $1 and active = $2" 18 #t)
+@end example
+
+@end deffn
+
+
 @deffn Primitive dbi-get_status db-handle
 
 Return a pair whose car is the status numeric code and cdr is a
@@ -267,13 +350,52 @@ handle object.
 
 @deffn Primitive dbi-get_row db-handle
 
-This function, called after dbi-query, returns @code{#f} if there isn't
-a next row to retrieve; otherwise it returns a pair. The car of the
-pair contains the field name and cdr is it's value.
+Called after @code{dbi-query} or @code{dbi-params-query}, returns the
+next row of the result set, or @code{#f} when no more rows are available.
+
+A row is returned as an association list: a list of @code{(field-name
+. value)} pairs, one per column.  Field names are strings.  Column
+values use the closest Scheme type according to the following
+conventions:
+
+@multitable @columnfractions 0.35 0.3 0.35
+@headitem SQL type @tab Scheme value @tab Notes
+@item INTEGER / SMALLINT / BIGINT @tab exact integer @tab
+@item REAL / FLOAT / DOUBLE @tab inexact real @tab
+@item BOOLEAN @tab @code{#t} / @code{#f} @tab PostgreSQL only; SQLite3 stores as integer
+@item TEXT / VARCHAR / CHAR @tab string @tab
+@item NUMERIC / DECIMAL @tab string @tab Preserves exact representation
+@item MONEY @tab string @tab Avoids locale-dependent formatting
+@item BYTEA / BLOB @tab string @tab Raw bytes as a Scheme string
+@item DATE / TIME / TIMESTAMP @tab string @tab ISO 8601 format
+@item UUID / JSON / JSONB @tab string @tab
+@item INTEGER[] / BIGINT[] @tab list of exact integers @tab PostgreSQL array types
+@item SQL NULL @tab @code{(if #f #f)} (unspecified) @tab Distinct from @code{#f}
+@end multitable
+
+@strong{NULL handling}: a SQL NULL column is returned as the Scheme
+unspecified value @code{(if #f #f)}, @emph{not} as @code{#f}.  This
+preserves the distinction between a NULL value and a boolean false or
+a missing row.  Test for it with @code{(eq? val (if #f #f))}.
+
+When there are no more rows, @code{dbi-get_row} returns @code{#f} and
+sets the status to a success code (e.g.@: @samp{row end}).  Always
+check @code{dbi-get_status} if you need to distinguish an empty result
+from an error.
 
 Example:
 @example
-(dbi-get_row db)
+(dbi-query db "select id, name, score from results")
+(let loop ((row (dbi-get_row db)))
+  (when row
+    (let ((id    (assoc-ref row "id"))
+          (name  (assoc-ref row "name"))
+          (score (assoc-ref row "score")))
+      ;; score may be SQL NULL:
+      (if (eq? score (if #f #f))
+          (format #t "~a ~a: no score~%" id name)
+          (format #t "~a ~a: ~a~%" id name score)))
+    (loop (dbi-get_row db))))
 @end example
 @end deffn
 
@@ -421,6 +543,33 @@ was correctly closed.
 
 This should run the query and set the status, but should not return
 any rows.  To return rows, the getrow function must be implemented.
+@sp 1
+
+@defun void __bcknd_params_query_g_db_handle(gdbi_db_handle_t* dbh, char* query, int argc, SCM* argv)
+@end defun
+
+Optional but recommended.  Prepare @var{query} as a parameterized
+statement, bind the @var{argc} Scheme values in @var{argv} to its
+placeholders, and execute it.  The placeholder syntax is
+backend-specific (@code{?} for SQLite3 and MySQL, @code{$N} for
+PostgreSQL).
+
+Implementations must:
+@itemize @bullet
+@item Verify that @code{argc} matches the number of placeholders in
+@var{query} and set an error status if not.
+@item Map Scheme types to native bind types: boolean @rarr{} integer
+0/1 (or native boolean), exact integer @rarr{} 64-bit integer, inexact
+real @rarr{} double, string @rarr{} text, null list @rarr{} SQL NULL.
+@item For statements that return rows (SELECT, RETURNING, @dots{}),
+leave the prepared statement ready for @code{dbi-get_row} to step
+through.
+@item For statements that produce no rows (DDL, DML without RETURNING),
+execute the statement fully and set status to success.
+@end itemize
+
+If this function is not implemented in the plugin, calling
+@code{dbi-params-query} from Scheme will signal an error.
 @sp 1
 
 @defun SCM __mysql_getrow_g_db_handle(gdbi_db_handle_t* dbh)
