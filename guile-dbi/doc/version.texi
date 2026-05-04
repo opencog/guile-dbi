@@ -1,4 +1,4 @@
-@set UPDATED 1 May 2026
+@set UPDATED 4 May 2026
 @set UPDATED-MONTH May 2026
-@set EDITION 3.1.1
-@set VERSION 3.1.1
+@set EDITION 3.2.0
+@set VERSION 3.2.0
