@@ -22,7 +22,6 @@
 
 ACLOCAL_AMFLAGS = -I m4
 
-AUTOMAKE_OPTIONS = gnu
 SUBDIRS = src
 
 MAKEFLAGS = --no-print-directory
