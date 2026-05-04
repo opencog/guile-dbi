@@ -9,6 +9,7 @@ guile-dbd-mysql/config.h.in
 guile-dbd-mysql/config.h.in~
 guile-dbd-mysql/config.sub
 guile-dbd-mysql/configure
+guile-dbd-mysql/configure~
 guile-dbd-mysql/depcomp
 guile-dbd-mysql/install-sh
 guile-dbd-mysql/ltmain.sh
@@ -26,6 +27,7 @@ guile-dbd-postgresql/config.h.in
 guile-dbd-postgresql/config.h.in~
 guile-dbd-postgresql/config.sub
 guile-dbd-postgresql/configure
+guile-dbd-postgresql/configure~
 guile-dbd-postgresql/depcomp
 guile-dbd-postgresql/install-sh
 guile-dbd-postgresql/ltmain.sh
@@ -43,6 +45,7 @@ guile-dbd-sqlite3/config.h.in
 guile-dbd-sqlite3/config.h.in~
 guile-dbd-sqlite3/config.sub
 guile-dbd-sqlite3/configure
+guile-dbd-sqlite3/configure~
 guile-dbd-sqlite3/depcomp
 guile-dbd-sqlite3/install-sh
 guile-dbd-sqlite3/ltmain.sh
@@ -51,6 +54,7 @@ guile-dbd-sqlite3/missing
 guile-dbd-sqlite3/src/Makefile.in
 guile-dbi/Makefile.in
 guile-dbi/aclocal.m4
+guile-dbi/ar-lib
 guile-dbi/autogen.err
 guile-dbi/autom4te.cache/
 guile-dbi/build/
@@ -68,6 +72,7 @@ guile-dbi/depcomp
 guile-dbi/doc/Makefile
 guile-dbi/doc/Makefile.in
 guile-dbi/doc/guile-dbi.info
+guile-dbi/doc/mdate-sh
 guile-dbi/doc/texinfo.tex
 guile-dbi/include/Makefile.in
 guile-dbi/include/guile-dbi/Makefile.in
