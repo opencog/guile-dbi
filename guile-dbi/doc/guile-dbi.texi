@@ -577,7 +577,9 @@ execute the statement fully and set status to success.
 @end itemize
 
 If this function is not implemented in the plugin, calling
-@code{dbi-params-query} from Scheme will signal an error.
+@code{dbi-params-query} from Scheme will not execute the query;
+instead, the status is set to an error (inspect with
+@code{dbi-get_status}) and no Scheme exception is raised.
 @sp 1
 
 @defun SCM __mysql_getrow_g_db_handle(gdbi_db_handle_t* dbh)
