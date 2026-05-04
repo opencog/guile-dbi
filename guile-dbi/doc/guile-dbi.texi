@@ -566,9 +566,9 @@ Implementations must:
 @itemize @bullet
 @item Verify that @code{argc} matches the number of placeholders in
 @var{query} and set an error status if not.
-@item Map Scheme types to native bind types: boolean @rarr{} integer
-0/1 (or native boolean), exact integer @rarr{} 64-bit integer, inexact
-real @rarr{} double, string @rarr{} text, null list @rarr{} SQL NULL.
+@item Map Scheme types to native bind types: boolean integer
+0/1 (or native boolean), exact integer 64-bit integer, inexact
+real double, string text, null list SQL NULL.
 @item For statements that return rows (SELECT, RETURNING, @dots{}),
 leave the prepared statement ready for @code{dbi-get_row} to step
 through.
