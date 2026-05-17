@@ -51,6 +51,7 @@ SCM_DEFINE (make_g_db_handle, "dbi-open", 2, 0, 0, (SCM bcknd, SCM conn_string),
   g_db_handle->handle = NULL;
   g_db_handle->closed = SCM_BOOL_T;
   g_db_handle->in_free = 0;
+  g_db_handle->affected_rows = 0; /* kept for backward compatibility, not used */
   g_db_handle->db_info = NULL;
   g_db_handle->bcknd_str = scm_to_locale_string (bcknd);
   g_db_handle->bcknd_strlen = strlen (g_db_handle->bcknd_str);
@@ -285,6 +286,25 @@ SCM_DEFINE (getrow_g_db_handle, "dbi-get_row", 1, 0, 0, (SCM db_handle),
 
   scm_remember_upto_here_1 (db_handle);
   return (retrow);
+}
+#undef FUNC_NAME
+
+SCM_DEFINE (affected_rows_g_db_handle, "dbi-affected-rows", 1, 0, 0,
+            (SCM db_handle),
+            "Return number of rows affected by the last query.")
+#define FUNC_NAME s_affected_rows_g_db_handle
+{
+  gdbi_db_handle_t *g_db_handle = NULL;
+
+  SCM_ASSERT (DBI_SMOB_P (db_handle), db_handle, SCM_ARG1, FUNC_NAME);
+
+  g_db_handle = (gdbi_db_handle_t *)SCM_SMOB_DATA (db_handle);
+
+  if (g_db_handle == NULL)
+    return SCM_BOOL_F;
+
+  scm_remember_upto_here_1 (db_handle);
+  return scm_from_int (g_db_handle->affected_rows);
 }
 #undef FUNC_NAME
 
