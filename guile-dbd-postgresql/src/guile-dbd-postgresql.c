@@ -44,6 +44,7 @@ typedef struct
   int lget;
   int retn;
   int is_params; /* 1 = came from PQexecParams, 0 = came from PQexec */
+  int affected_rows;
 } gdbi_pgsql_ds_t;
 
 static void dbi_set_error (gdbi_db_handle_t *dbh, const char *msg)
@@ -264,6 +265,7 @@ void __postgresql_query_g_db_handle (gdbi_db_handle_t *dbh, char *query)
   {
     dbh->status
       = scm_cons (scm_from_int (0), scm_from_utf8_string ("query ok"));
+    pgsqlP->affected_rows = atoi (PQcmdTuples (pgsqlP->res));
   }
   else
   {
@@ -271,6 +273,14 @@ void __postgresql_query_g_db_handle (gdbi_db_handle_t *dbh, char *query)
     PQclear (pgsqlP->res);
     pgsqlP->res = NULL;
   }
+}
+
+int __postgresql_affected_rows_g_db_handle (gdbi_db_handle_t *dbh)
+{
+  gdbi_pgsql_ds_t *pgsqlP = (gdbi_pgsql_ds_t *)dbh->db_info;
+  if (pgsqlP == NULL)
+    return 0;
+  return pgsqlP->affected_rows;
 }
 
 static SCM getrow_for_params (gdbi_db_handle_t *dbh)
@@ -738,6 +748,7 @@ cleanup:
   {
     g_db_handle->status
       = scm_cons (scm_from_int (0), scm_from_utf8_string ("query ok"));
+    pgsqlP->affected_rows = atoi (PQcmdTuples (res));
     pgsqlP->lget = 0;
     pgsqlP->is_params = 1;
     /* clear previous result before assigning new one */
