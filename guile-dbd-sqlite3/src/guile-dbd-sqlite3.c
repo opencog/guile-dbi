@@ -41,6 +41,7 @@ typedef struct
   sqlite3_stmt *stmt;
   SCM cached_row;
   int has_cached_row;
+  int affected_rows;
 #ifdef PERF_DEBUG
   struct timeval toti;
   struct timeval lati;
@@ -174,6 +175,14 @@ void __sqlite3_close_g_db_handle (gdbi_db_handle_t *dbh)
   }
 }
 
+int __sqlite3_affected_rows_g_db_handle (gdbi_db_handle_t *dbh)
+{
+  gdbi_sqlite3_ds_t *db_info = (gdbi_sqlite3_ds_t *)dbh->db_info;
+  if (db_info == NULL)
+    return 0;
+  return db_info->affected_rows;
+}
+
 void __sqlite3_params_query_g_db_handle(
     gdbi_db_handle_t *dbh,
     char *query,
@@ -257,6 +266,7 @@ void __sqlite3_params_query_g_db_handle(
     if (rc == SQLITE_DONE)
     {
         dbh->status = status_cons(0, "query ok");
+        db_info->affected_rows = sqlite3_changes (db_info->sqlite3_obj);
         sqlite3_finalize(stmt);
         db_info->stmt = NULL;
         return;
@@ -317,7 +327,10 @@ void __sqlite3_query_g_db_handle (gdbi_db_handle_t *dbh, char *query_str)
     if (rc != SQLITE_DONE)
       dbh->status = status_cons (1, sqlite3_errmsg (db_info->sqlite3_obj));
     else
+    {
       dbh->status = status_cons (0, "query ok");
+      db_info->affected_rows = sqlite3_changes (db_info->sqlite3_obj);
+    }
 
     sqlite3_finalize (stmt);
     db_info->stmt = NULL;
