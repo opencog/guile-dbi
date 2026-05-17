@@ -67,6 +67,7 @@ typedef struct
   unsigned int num_fields;
 
   int retn;
+  int affected_rows;
 } gdbi_mysql_ds_t;
 
 static void free_binds (MYSQL_BIND *binds, int cnt)
@@ -310,6 +311,8 @@ void __mysql_query_g_db_handle (gdbi_db_handle_t *dbh, char *query)
       = scm_cons (scm_from_int (mysqlP->mysql->net.last_errno), scm_from_locale_string (mysql_error (mysqlP->mysql)));
     return;
   }
+
+  mysqlP->affected_rows = mysql_affected_rows (mysqlP->mysql);
 
   mysqlP->res = mysql_use_result (mysqlP->mysql);
   if (mysqlP->res == NULL)
@@ -657,6 +660,8 @@ void __mysql_params_query_g_db_handle (gdbi_db_handle_t *dbh, const char *query,
     goto cleanup_params;
   }
 
+  mysqlP->affected_rows = mysql_stmt_affected_rows (mysqlP->stmt);
+
   /* -------- prepare result fetching -------- */
 
   mysqlP->num_fields = mysql_stmt_field_count (mysqlP->stmt);
@@ -761,6 +766,7 @@ void __mysql_params_query_g_db_handle (gdbi_db_handle_t *dbh, const char *query,
   }
 
   mysqlP->retn = mysql_stmt_affected_rows (mysqlP->stmt);
+  mysqlP->affected_rows = mysqlP->retn;
   dbh->status = scm_cons (scm_from_int (0), scm_from_utf8_string ("query ok"));
 
 cleanup_params:
@@ -800,4 +806,12 @@ cleanup_stmt:
   mysqlP->retn = 0;
 
   return;
+}
+
+int __mysql_affected_rows_g_db_handle (gdbi_db_handle_t *dbh)
+{
+  gdbi_mysql_ds_t *mysqlP = (gdbi_mysql_ds_t *)dbh->db_info;
+  if (mysqlP == NULL)
+    return 0;
+  return mysqlP->affected_rows;
 }
