@@ -36,6 +36,7 @@ void __test_make_g_db_handle(gdbi_db_handle_t* dbh);
 void __test_close_g_db_handle(gdbi_db_handle_t* dbh);
 void __test_query_g_db_handle(gdbi_db_handle_t* dbh, char* query);
 SCM __test_getrow_g_db_handle(gdbi_db_handle_t* dbh);
+int __test_affected_rows_g_db_handle(gdbi_db_handle_t* dbh);
 
 
 typedef struct gdbi_test_ds
@@ -89,6 +90,7 @@ __test_query_g_db_handle(gdbi_db_handle_t* dbh, char* query)
     }
   dbh->status = (SCM) scm_cons(scm_from_int(0),
 			       scm_from_locale_string("test query ok"));
+  dbh->affected_rows = 0;
   return;
 }
 
@@ -106,4 +108,10 @@ __test_getrow_g_db_handle(gdbi_db_handle_t* dbh)
   dbh->status = (SCM) scm_cons(scm_from_int(0),
 			       scm_from_locale_string("row retrieved"));
   return (SCM_BOOL_F);
+}
+
+int
+__test_affected_rows_g_db_handle(gdbi_db_handle_t* dbh)
+{
+  return dbh->affected_rows;
 }
