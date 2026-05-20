@@ -1,5 +1,5 @@
 /* guile-dbi.h - Main include file
- * Copyright (C) 2004, 2005 Free Software Foundation, Inc.
+ * Copyright (C) 2004, 2005, 2026 Free Software Foundation, Inc.
  * Written by Maurizio Boriani <baux@member.fsf.org>
  *
  * This file is part of the guile-dbi.
@@ -53,6 +53,6 @@ void init_dbi(void);
 
 /* dbd dynamic wrapper stuff */
 void __gdbi_dbd_wrap(gdbi_db_handle_t* dbh, const char* function_name,
-		     void** function_pointer);
+                     void** function_pointer);
 /* end dbd dynamic wrapper stuff */
 #endif
