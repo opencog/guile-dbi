@@ -41,7 +41,6 @@ typedef struct
   sqlite3_stmt *stmt;
   SCM cached_row;
   int has_cached_row;
-  int affected_rows;
 #ifdef PERF_DEBUG
   struct timeval toti;
   struct timeval lati;
@@ -175,117 +174,120 @@ void __sqlite3_close_g_db_handle (gdbi_db_handle_t *dbh)
   }
 }
 
-int __sqlite3_affected_rows_g_db_handle (gdbi_db_handle_t *dbh)
+void __sqlite3_params_query_g_db_handle (gdbi_db_handle_t *dbh, char *query,
+                                         int argc, SCM *argv)
 {
-  gdbi_sqlite3_ds_t *db_info = (gdbi_sqlite3_ds_t *)dbh->db_info;
-  if (db_info == NULL)
-    return 0;
-  return db_info->affected_rows;
-}
+  gdbi_sqlite3_ds_t *db_info = dbh->db_info;
+  if (!db_info)
+  {
+    dbh->status = status_cons (1, "invalid dbi connection");
+    return;
+  }
 
-void __sqlite3_params_query_g_db_handle(
-    gdbi_db_handle_t *dbh,
-    char *query,
-    int argc,
-    SCM *argv)
-{
-    gdbi_sqlite3_ds_t *db_info = dbh->db_info;
-    if (!db_info)
+  /* cleanup old stmt */
+  if (db_info->stmt)
+  {
+    sqlite3_finalize (db_info->stmt);
+    db_info->stmt = NULL;
+  }
+
+  db_info->has_cached_row = 0;
+  db_info->cached_row = SCM_UNDEFINED;
+
+  /* prepare statement */
+  sqlite3_stmt *stmt = NULL;
+  int rc = sqlite3_prepare_v2 (db_info->sqlite3_obj, query, -1, &stmt, NULL);
+  if (rc != SQLITE_OK)
+  {
+    dbh->status = status_cons (1, sqlite3_errmsg (db_info->sqlite3_obj));
+    return;
+  }
+
+  /* bind parameters */
+  if (sqlite3_bind_parameter_count (stmt) != argc)
+  {
+    dbh->status = status_cons (1, "params count mismatch");
+    goto error;
+  }
+
+  for (int i = 0; i < argc; i++)
+  {
+    int idx = i + 1;
+    SCM v = argv[i];
+    if (scm_is_bool (v))
+      rc = sqlite3_bind_int (stmt, idx, scm_is_true (v) ? 1 : 0);
+    else if (scm_is_integer (v))
+      rc = sqlite3_bind_int64 (stmt, idx, scm_to_long_long (v));
+    else if (scm_is_number (v))
+      rc = sqlite3_bind_double (stmt, idx, scm_to_double (v));
+    else if (scm_is_string (v))
     {
-        dbh->status = status_cons(1, "invalid dbi connection");
-        return;
+      char *s = scm_to_locale_string (v);
+      if (!s)
+        goto error;
+      rc = sqlite3_bind_text (stmt, idx, s, -1, SQLITE_TRANSIENT);
+      free (s);
+    }
+    else if (scm_is_null (v))
+      rc = sqlite3_bind_null (stmt, idx);
+    else
+    {
+      dbh->status = status_cons (1, "unsupported parameter type");
+      goto error;
     }
 
-    /* cleanup old stmt */
-    if (db_info->stmt)
-    {
-        sqlite3_finalize(db_info->stmt);
-        db_info->stmt = NULL;
-    }
-
-    /* reset cache */
-    db_info->has_cached_row = 0;
-    db_info->cached_row = SCM_UNDEFINED;
-
-    /* prepare */
-    sqlite3_stmt *stmt = NULL;
-    int rc = sqlite3_prepare_v2(db_info->sqlite3_obj, query, -1, &stmt, NULL);
     if (rc != SQLITE_OK)
     {
-        dbh->status = status_cons(1, sqlite3_errmsg(db_info->sqlite3_obj));
-        return;
+      dbh->status = status_cons (1, sqlite3_errmsg (db_info->sqlite3_obj));
+      goto error;
     }
+  }
 
-    /* bind params */
-    if (sqlite3_bind_parameter_count(stmt) != argc)
+  /* execute */
+  rc = sqlite3_step (stmt);
+
+  int col_count = sqlite3_column_count (stmt);
+
+  if (col_count == 0)
+  {
+    /* DML */
+    if (rc != SQLITE_DONE)
     {
-        dbh->status = status_cons(1, "params count mismatch");
-        goto error;
+      dbh->status = status_cons (1, sqlite3_errmsg (db_info->sqlite3_obj));
     }
-
-    for (int i = 0; i < argc; i++)
+    else
     {
-        int idx = i + 1;
-        SCM v = argv[i];
-
-        if (scm_is_bool(v))
-            rc = sqlite3_bind_int(stmt, idx, scm_is_true(v) ? 1 : 0);
-        else if (scm_is_integer(v))
-            rc = sqlite3_bind_int64(stmt, idx, scm_to_long_long(v));
-        else if (scm_is_number(v))
-            rc = sqlite3_bind_double(stmt, idx, scm_to_double(v));
-        else if (scm_is_string(v))
-        {
-            char *s = scm_to_locale_string(v);
-            if (!s) goto error;
-            rc = sqlite3_bind_text(stmt, idx, s, -1, SQLITE_TRANSIENT);
-            free(s);
-        }
-        else if (scm_is_null(v))
-        {
-            rc = sqlite3_bind_null(stmt, idx);
-        }
-        else
-        {
-            dbh->status = status_cons(1, "unsupported parameter type");
-            goto error;
-        }
-
-        if (rc != SQLITE_OK)
-        {
-            dbh->status = status_cons(1, sqlite3_errmsg(db_info->sqlite3_obj));
-            goto error;
-        }
-    }
-
-    /* ================= EXECUTE PROBE ================= */
-
-    rc = sqlite3_step(stmt);
-
-    /* non-select or no row */
-    if (rc == SQLITE_DONE)
-    {
-        dbh->status = status_cons(0, "query ok");
-        db_info->affected_rows = sqlite3_changes (db_info->sqlite3_obj);
-        sqlite3_finalize(stmt);
-        db_info->stmt = NULL;
-        return;
-    }
-
-    /* SELECT with rows */
-    if (rc == SQLITE_ROW)
-    {
-      db_info->cached_row = convert_row (stmt);
-      db_info->has_cached_row = 1;
-
-      db_info->stmt = stmt;
-
       dbh->status = status_cons (0, "query ok");
-      return;
+      dbh->affected_rows = sqlite3_changes (db_info->sqlite3_obj);
     }
+    sqlite3_finalize (stmt);
+    db_info->stmt = NULL;
+    return;
+  }
 
-    /* error */
-    dbh->status = status_cons (1, sqlite3_errmsg (db_info->sqlite3_obj));
+  /* SELECT query */
+  if (rc == SQLITE_ROW)
+  {
+    db_info->cached_row = convert_row (stmt);
+    db_info->has_cached_row = 1;
+    db_info->stmt = stmt;
+    dbh->status = status_cons (0, "query ok");
+    dbh->affected_rows = 0;
+    return;
+  }
+
+  /* empty SELECT */
+  if (rc == SQLITE_DONE)
+  {
+    dbh->status = status_cons (0, "query ok");
+    dbh->affected_rows = 0;
+    sqlite3_finalize (stmt);
+    db_info->stmt = NULL;
+    return;
+  }
+
+  /* error */
+  dbh->status = status_cons (1, sqlite3_errmsg (db_info->sqlite3_obj));
 
 error:
   if (stmt)
@@ -309,7 +311,7 @@ void __sqlite3_query_g_db_handle (gdbi_db_handle_t *dbh, char *query_str)
     db_info->stmt = NULL;
   }
 
-  /* prepare the statement */
+  /* prepare statement */
   sqlite3_stmt *stmt = NULL;
   int rc
     = sqlite3_prepare_v2 (db_info->sqlite3_obj, query_str, -1, &stmt, NULL);
@@ -319,39 +321,49 @@ void __sqlite3_query_g_db_handle (gdbi_db_handle_t *dbh, char *query_str)
     return;
   }
 
-  /* Check if the query is a SELECT statement (has columns) */
-  if (sqlite3_column_count (stmt) == 0)
+  int col_count = sqlite3_column_count (stmt);
+
+  if (col_count == 0)
   {
-    /* If no result rows, execute and return immediately */
+    /* DML or no-column statement */
     rc = sqlite3_step (stmt);
     if (rc != SQLITE_DONE)
+    {
       dbh->status = status_cons (1, sqlite3_errmsg (db_info->sqlite3_obj));
+    }
     else
     {
       dbh->status = status_cons (0, "query ok");
-      db_info->affected_rows = sqlite3_changes (db_info->sqlite3_obj);
+      dbh->affected_rows = sqlite3_changes (db_info->sqlite3_obj);
     }
-
     sqlite3_finalize (stmt);
     db_info->stmt = NULL;
     return;
   }
 
-  /* If SELECT query, cache the first row */
+  /* SELECT query */
   rc = sqlite3_step (stmt);
   if (rc == SQLITE_ROW)
   {
-    // Cache the first row
     db_info->cached_row = convert_row (stmt);
     db_info->has_cached_row = 1;
-
-    // Store the stmt for subsequent use
     db_info->stmt = stmt;
     dbh->status = status_cons (0, "query ok");
+    dbh->affected_rows = 0;
     return;
   }
 
-  /* Handle any other errors */
+  /* empty result set */
+  if (rc == SQLITE_DONE)
+  {
+    dbh->status = status_cons (0, "query ok");
+    dbh->affected_rows = 0;
+    sqlite3_finalize (stmt);
+    db_info->stmt = NULL;
+    return;
+  }
+
+  /* error */
   dbh->status = status_cons (1, sqlite3_errmsg (db_info->sqlite3_obj));
   sqlite3_finalize (stmt);
   db_info->stmt = NULL;
