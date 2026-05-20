@@ -806,8 +806,3 @@ void __mysql_params_query_g_db_handle (gdbi_db_handle_t *dbh, const char *query,
 
   return;
 }
-
-int __mysql_affected_rows_g_db_handle (gdbi_db_handle_t *dbh)
-{
-  return dbh->affected_rows;
-}
