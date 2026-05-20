@@ -36,9 +36,9 @@ typedef struct
   lt_dlhandle handle;
   void* db_info;
   int in_free;  /* boolean, used to avoid alloc during garbage collection */
-  int affected_rows; /* number of rows affected by last query */
   const char * bcknd_str;
   size_t bcknd_strlen;
+  long long affected_rows; /* number of rows affected by last query */
 } gdbi_db_handle_t;
 /* end guile smob struct */
 

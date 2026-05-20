@@ -28,7 +28,7 @@
 
 static scm_t_bits g_db_handle_tag;
 
-#define DBI_SMOB_P(obj) \
+#define DBI_SMOB_P(obj)                                       \
   ((SCM_NIMP (obj)) && (SCM_TYP16 (obj) == g_db_handle_tag))
 
 SCM_DEFINE (make_g_db_handle, "dbi-open", 2, 0, 0, (SCM bcknd, SCM conn_string),
@@ -51,46 +51,46 @@ SCM_DEFINE (make_g_db_handle, "dbi-open", 2, 0, 0, (SCM bcknd, SCM conn_string),
   g_db_handle->handle = NULL;
   g_db_handle->closed = SCM_BOOL_T;
   g_db_handle->in_free = 0;
-  g_db_handle->affected_rows = 0; /* kept for backward compatibility, not used */
+  g_db_handle->affected_rows = 0;
   g_db_handle->db_info = NULL;
   g_db_handle->bcknd_str = scm_to_locale_string (bcknd);
   g_db_handle->bcknd_strlen = strlen (g_db_handle->bcknd_str);
 
   sodbd_len = sizeof (char)
-              * (strlen ("libguile-dbd-") + g_db_handle->bcknd_strlen + 1);
+    * (strlen ("libguile-dbd-") + g_db_handle->bcknd_strlen + 1);
   sodbd = (char *)malloc (sodbd_len);
   if (sodbd == NULL)
-  {
-    g_db_handle->status = scm_cons (scm_from_int (errno),
-                                    scm_from_locale_string (strerror (errno)));
-    SCM_RETURN_NEWSMOB (g_db_handle_tag, g_db_handle);
-  }
+    {
+      g_db_handle->status = scm_cons (scm_from_int (errno),
+                                      scm_from_locale_string (strerror (errno)));
+      SCM_RETURN_NEWSMOB (g_db_handle_tag, g_db_handle);
+    }
 
   snprintf (sodbd, sodbd_len, "libguile-dbd-%s", g_db_handle->bcknd_str);
 
   g_db_handle->handle = lt_dlopenext (sodbd);
   if (g_db_handle->handle == NULL)
-  {
-    free (sodbd);
-    g_db_handle->status
-      = scm_cons (scm_from_int (1), scm_from_locale_string (lt_dlerror ()));
-    SCM_RETURN_NEWSMOB (g_db_handle_tag, g_db_handle);
-  }
+    {
+      free (sodbd);
+      g_db_handle->status
+        = scm_cons (scm_from_int (1), scm_from_locale_string (lt_dlerror ()));
+      SCM_RETURN_NEWSMOB (g_db_handle_tag, g_db_handle);
+    }
 
   __gdbi_dbd_wrap (g_db_handle, __FUNCTION__, (void **)&connect);
   if (scm_equal_p (SCM_CAR (g_db_handle->status), scm_from_int (0))
       == SCM_BOOL_F)
-  {
-    free (sodbd);
-    SCM_RETURN_NEWSMOB (g_db_handle_tag, g_db_handle);
-  }
+    {
+      free (sodbd);
+      SCM_RETURN_NEWSMOB (g_db_handle_tag, g_db_handle);
+    }
 
   (*connect) (g_db_handle);
 
   if (sodbd != NULL)
-  {
-    free (sodbd);
-  }
+    {
+      free (sodbd);
+    }
 
   SCM_RETURN_NEWSMOB (g_db_handle_tag, g_db_handle);
 }
@@ -118,13 +118,13 @@ static int print_db_handle (SCM g_db_handle_smob, SCM port,
 
   scm_puts ("#<guile-dbi ", port);
   if (scm_equal_p (g_db_handle->closed, SCM_BOOL_T) == SCM_BOOL_T)
-  {
-    scm_puts ("close ", port);
-  }
+    {
+      scm_puts ("close ", port);
+    }
   else
-  {
-    scm_puts ("open ", port);
-  }
+    {
+      scm_puts ("open ", port);
+    }
   scm_display (g_db_handle->bcknd, port);
   scm_puts (" ", port);
   scm_display (g_db_handle->constr, port);
@@ -148,24 +148,24 @@ SCM_DEFINE (close_g_db_handle, "dbi-close", 1, 0, 0, (SCM db_handle),
   g_db_handle = (gdbi_db_handle_t *)SCM_SMOB_DATA (db_handle);
 
   if (g_db_handle->closed == SCM_BOOL_T)
-  {
-    return SCM_UNSPECIFIED;
-  }
+    {
+      return SCM_UNSPECIFIED;
+    }
 
   __gdbi_dbd_wrap (g_db_handle, __FUNCTION__, (void **)&dbd_close);
   if (scm_equal_p (SCM_CAR (g_db_handle->status), scm_from_int (0))
       == SCM_BOOL_F)
-  {
-    scm_remember_upto_here_1 (db_handle);
-    return SCM_UNSPECIFIED;
-  }
+    {
+      scm_remember_upto_here_1 (db_handle);
+      return SCM_UNSPECIFIED;
+    }
 
   (*dbd_close) (g_db_handle);
   if (g_db_handle->handle)
-  {
-    lt_dlclose (g_db_handle->handle);
-    g_db_handle->handle = NULL;
-  }
+    {
+      lt_dlclose (g_db_handle->handle);
+      g_db_handle->handle = NULL;
+    }
 
   scm_remember_upto_here_1 (db_handle);
   return SCM_UNSPECIFIED;
@@ -184,10 +184,10 @@ static size_t free_db_handle (SCM g_db_handle_smob)
   close_g_db_handle (g_db_handle_smob);
 
   if (g_db_handle != NULL)
-  {
-    free ((void *)g_db_handle->bcknd_str);
-    scm_gc_free (g_db_handle, sizeof (gdbi_db_handle_t), "g_db_handle");
-  }
+    {
+      free ((void *)g_db_handle->bcknd_str);
+      scm_gc_free (g_db_handle, sizeof (gdbi_db_handle_t), "g_db_handle");
+    }
 
   SCM_SETCDR (g_db_handle_smob, SCM_EOL);
   return 0;
@@ -211,9 +211,9 @@ SCM_DEFINE (query_g_db_handle, "dbi-query", 2, 0, 0, (SCM db_handle, SCM query),
   __gdbi_dbd_wrap (g_db_handle, __FUNCTION__, (void **)&dbi_query);
   if (scm_equal_p (SCM_CAR (g_db_handle->status), scm_from_int (0))
       == SCM_BOOL_T)
-  {
-    (*dbi_query) (g_db_handle, query_str);
-  }
+    {
+      (*dbi_query) (g_db_handle, query_str);
+    }
 
   free (query_str);
   scm_remember_upto_here_1 (db_handle);
@@ -242,20 +242,20 @@ SCM_DEFINE (params_query_g_db_handle, "dbi-params-query", 3, 0, 0,
 
   if (scm_equal_p (SCM_CAR (g_db_handle->status), scm_from_int (0))
       == SCM_BOOL_T)
-  {
-    int argc = scm_to_int (scm_length (params));
-    SCM *argv = (SCM *)calloc (sizeof (SCM), argc);
-    SCM lst = params;
-
-    for (int i = 0; i < argc; i++)
     {
-      argv[i] = SCM_CAR (lst);
-      lst = SCM_CDR (lst);
-    }
+      int argc = scm_to_int (scm_length (params));
+      SCM *argv = (SCM *)calloc (sizeof (SCM), argc);
+      SCM lst = params;
 
-    (*dbi_params_query) (g_db_handle, query_str, argc, argv);
-    free (argv);
-  }
+      for (int i = 0; i < argc; i++)
+        {
+          argv[i] = SCM_CAR (lst);
+          lst = SCM_CDR (lst);
+        }
+
+      (*dbi_params_query) (g_db_handle, query_str, argc, argv);
+      free (argv);
+    }
 
   free (query_str);
   scm_remember_upto_here_1 (db_handle);
@@ -277,10 +277,10 @@ SCM_DEFINE (getrow_g_db_handle, "dbi-get_row", 1, 0, 0, (SCM db_handle),
   __gdbi_dbd_wrap (g_db_handle, __FUNCTION__, (void **)&dbi_getrow);
   if (scm_equal_p (SCM_CAR (g_db_handle->status), scm_from_int (0))
       == SCM_BOOL_F)
-  {
-    scm_remember_upto_here_1 (db_handle);
-    return (retrow);
-  }
+    {
+      scm_remember_upto_here_1 (db_handle);
+      return (retrow);
+    }
 
   retrow = (*dbi_getrow) (g_db_handle);
 
@@ -319,10 +319,10 @@ SCM_DEFINE (getstat_g_db_handle, "dbi-get_status", 1, 0, 0, (SCM db_handle),
   g_db_handle = (gdbi_db_handle_t *)SCM_SMOB_DATA (db_handle);
 
   if (g_db_handle != NULL)
-  {
-    scm_remember_upto_here_1 (db_handle);
-    return (g_db_handle->status);
-  }
+    {
+      scm_remember_upto_here_1 (db_handle);
+      return (g_db_handle->status);
+    }
 
   return (SCM_BOOL_F);
 }
@@ -333,8 +333,8 @@ void init_db_handle_type (void)
 {
   g_db_handle_tag
     = scm_make_smob_type ("g_db_handle", sizeof (gdbi_db_handle_t));
-/* guile-2.0 and newer should not do this.
-   See http://lists.gnu.org/archive/html/guile-user/2011-11/msg00074.html */
+  /* guile-2.0 and newer should not do this.
+     See http://lists.gnu.org/archive/html/guile-user/2011-11/msg00074.html */
 #if 0
   scm_set_smob_mark (g_db_handle_tag, mark_db_handle);
 #endif
@@ -368,26 +368,26 @@ void __gdbi_dbd_wrap (gdbi_db_handle_t *dbh, const char *function_name,
   func_len = sizeof (char) * (strlen (function_name) + dbh->bcknd_strlen + 10);
   func = malloc (func_len);
   if (NULL == func)
-  {
-    if (dbh->in_free)
-      return; /* do not SCM anything while in GC */
-    dbh->status = scm_cons (scm_from_int (errno),
-                            scm_from_locale_string (strerror (errno)));
-    return;
-  }
+    {
+      if (dbh->in_free)
+        return; /* do not SCM anything while in GC */
+      dbh->status = scm_cons (scm_from_int (errno),
+                              scm_from_locale_string (strerror (errno)));
+      return;
+    }
 
   /* I assume this is correct for all OS'es */
   snprintf (func, func_len, "__%s_%s", dbh->bcknd_str, function_name);
   lt_dlerror (); /* Clear any existing error -- Solaris needs this */
   *function_pointer = lt_dlsym (dbh->handle, func);
   if ((ret = lt_dlerror ()) != NULL)
-  {
-    free (func);
-    if (dbh->in_free)
-      return; /* do not SCM anything while in GC */
-    dbh->status = scm_cons (scm_from_int (1), scm_from_locale_string (ret));
-    return;
-  }
+    {
+      free (func);
+      if (dbh->in_free)
+        return; /* do not SCM anything while in GC */
+      dbh->status = scm_cons (scm_from_int (1), scm_from_locale_string (ret));
+      return;
+    }
 
   free (func);
 
