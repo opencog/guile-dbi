@@ -264,7 +264,7 @@ void __postgresql_query_g_db_handle (gdbi_db_handle_t *dbh, char *query)
     {
       dbh->status
         = scm_cons (scm_from_int (0), scm_from_utf8_string ("query ok"));
-      dbh->affected_rows = atoi (PQcmdTuples (pgsqlP->res));
+      dbh->affected_rows = atoll (PQcmdTuples (pgsqlP->res));
     }
   else
     {
@@ -272,11 +272,6 @@ void __postgresql_query_g_db_handle (gdbi_db_handle_t *dbh, char *query)
       PQclear (pgsqlP->res);
       pgsqlP->res = NULL;
     }
-}
-
-int __postgresql_affected_rows_g_db_handle (gdbi_db_handle_t *dbh)
-{
-  return dbh->affected_rows;
 }
 
 static SCM getrow_for_params (gdbi_db_handle_t *dbh)
@@ -744,7 +739,7 @@ void __postgresql_params_query_g_db_handle (gdbi_db_handle_t *g_db_handle,
     {
       g_db_handle->status
         = scm_cons (scm_from_int (0), scm_from_utf8_string ("query ok"));
-      g_db_handle->affected_rows = atoi (PQcmdTuples (res));
+      g_db_handle->affected_rows = atoll (PQcmdTuples (res));
       pgsqlP->lget = 0;
       pgsqlP->is_params = 1;
       /* clear previous result before assigning new one */
