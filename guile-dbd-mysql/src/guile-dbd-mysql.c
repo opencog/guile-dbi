@@ -318,6 +318,7 @@ void __mysql_query_g_db_handle (gdbi_db_handle_t *dbh, char *query)
     return;
   }
 
+  dbh->affected_rows = mysql_affected_rows (mysqlP->mysql);
   dbh->status = scm_cons (scm_from_int (0), scm_from_locale_string ("query ok, got results"));
 
   return;
@@ -657,6 +658,8 @@ void __mysql_params_query_g_db_handle (gdbi_db_handle_t *dbh, const char *query,
     goto cleanup_params;
   }
 
+  dbh->affected_rows = mysql_stmt_affected_rows (mysqlP->stmt);
+
   /* -------- prepare result fetching -------- */
 
   mysqlP->num_fields = mysql_stmt_field_count (mysqlP->stmt);
@@ -761,6 +764,7 @@ void __mysql_params_query_g_db_handle (gdbi_db_handle_t *dbh, const char *query,
   }
 
   mysqlP->retn = mysql_stmt_affected_rows (mysqlP->stmt);
+  dbh->affected_rows = mysqlP->retn;
   dbh->status = scm_cons (scm_from_int (0), scm_from_utf8_string ("query ok"));
 
 cleanup_params:
