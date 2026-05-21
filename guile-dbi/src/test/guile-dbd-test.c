@@ -109,7 +109,7 @@ __test_getrow_g_db_handle(gdbi_db_handle_t* dbh)
   return (SCM_BOOL_F);
 }
 
-int
+long long
 __test_affected_rows_g_db_handle(gdbi_db_handle_t* dbh)
 {
   return dbh->affected_rows;
