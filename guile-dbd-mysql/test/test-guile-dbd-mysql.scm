@@ -132,6 +132,148 @@
 (define count-row (dbi-get_row db-obj))
 (check "get count" (cdr (assoc "cnt" count-row)) 3)
 
+;; Test 1: affected_rows after single INSERT
+(check-status "insert single row for affected_rows"
+  (begin
+    (dbi-query db-obj "INSERT INTO dbi_test_table (id, name) VALUES (1, 'Alice')")
+    db-obj))
+
+(define affected-after-single-insert (dbi-affected-rows db-obj))
+(if (not (= affected-after-single-insert 1))
+    (begin
+      (display ";;; affected_rows after single insert FAILED: ")
+      (display "(expected 1 got ")
+      (display affected-after-single-insert)
+      (display ")")
+      (newline))
+    (begin
+      (display ";;; affected_rows after single insert PASSED")
+      (newline)))
+
+;; Test 2: affected_rows after multiple INSERT
+(check-status "insert multiple rows for affected_rows"
+  (begin
+    (dbi-query db-obj "INSERT INTO dbi_test_table (id, name) VALUES (2, 'Bob'), (3, 'Carol'), (4, 'Dave')")
+    db-obj))
+
+(define affected-after-multi-insert (dbi-affected-rows db-obj))
+(if (not (= affected-after-multi-insert 3))
+    (begin
+      (display ";;; affected_rows after multiple inserts FAILED: ")
+      (display "(expected 3 got ")
+      (display affected-after-multi-insert)
+      (display ")")
+      (newline))
+    (begin
+      (display ";;; affected_rows after multiple inserts PASSED")
+      (newline)))
+
+;; Test 3: affected_rows after UPDATE
+(check-status "update rows for affected_rows"
+  (begin
+    (dbi-query db-obj "UPDATE dbi_test_table SET name = 'Updated' WHERE id IN (2, 3)")
+    db-obj))
+
+(define affected-after-update (dbi-affected-rows db-obj))
+(if (not (= affected-after-update 2))
+    (begin
+      (display ";;; affected_rows after update FAILED: ")
+      (display "(expected 2 got ")
+      (display affected-after-update)
+      (display ")")
+      (newline))
+    (begin
+      (display ";;; affected_rows after update PASSED")
+      (newline)))
+
+;; Test 4: affected_rows when UPDATE matches no rows
+(check-status "update no matching rows for affected_rows"
+  (begin
+    (dbi-query db-obj "UPDATE dbi_test_table SET name = 'None' WHERE id = 999")
+    db-obj))
+
+(define affected-after-no-match (dbi-affected-rows db-obj))
+(if (not (= affected-after-no-match 0))
+    (begin
+      (display ";;; affected_rows when update matches nothing FAILED: ")
+      (display "(expected 0 got ")
+      (display affected-after-no-match)
+      (display ")")
+      (newline))
+    (begin
+      (display ";;; affected_rows when update matches nothing PASSED")
+      (newline)))
+
+;; Test 5: affected_rows after DELETE
+(check-status "delete row for affected_rows"
+  (begin
+    (dbi-query db-obj "DELETE FROM dbi_test_table WHERE id = 1")
+    db-obj))
+
+(define affected-after-delete (dbi-affected-rows db-obj))
+(if (not (= affected-after-delete 1))
+    (begin
+      (display ";;; affected_rows after delete FAILED: ")
+      (display "(expected 1 got ")
+      (display affected-after-delete)
+      (display ")")
+      (newline))
+    (begin
+      (display ";;; affected_rows after delete PASSED")
+      (newline)))
+
+;; Test 6: affected_rows after SELECT
+;; Per MariaDB docs: mysql_affected_rows() returns -1 for statements that
+;; return a result set (SELECT, SHOW, DESC, HELP, etc.).
+;; https://mariadb.com/docs/server/reference/sql-functions/secondary-functions/information-functions/row_count
+(dbi-query db-obj "DROP TABLE IF EXISTS dbi_test_table")
+(dbi-query db-obj "CREATE TABLE dbi_test_table (id INTEGER, name VARCHAR(50))")
+(check-status "select for affected_rows"
+  (begin
+    (dbi-query db-obj "SELECT * FROM dbi_test_table")
+    db-obj))
+
+(define affected-after-select (dbi-affected-rows db-obj))
+(if (not (= affected-after-select -1))
+    (begin
+     (display ";;; affected_rows after select FAILED: ")
+      (display "(expected -1 got ")
+      (display affected-after-select)
+      (display ")")
+      (newline))
+    (begin
+      (display ";;; affected_rows after select PASSED")
+      (newline)))
+
+;; Test 7: affected_rows updates with each query
+(check-status "first insert for sequence test"
+  (begin
+    (dbi-query db-obj "INSERT INTO dbi_test_table (id, name) VALUES (10, 'Test1')")
+    db-obj))
+
+(define first-affected (dbi-affected-rows db-obj))
+
+(check-status "second insert for sequence test"
+  (begin
+    (dbi-query db-obj "INSERT INTO dbi_test_table (id, name) VALUES (11, 'Test2'), (12, 'Test3')")
+    db-obj))
+
+(define second-affected (dbi-affected-rows db-obj))
+
+(if (not (and (= first-affected 1) (= second-affected 2)))
+    (begin
+      (display ";;; affected_rows updates after each query FAILED: ")
+      (display "(expected first=1 second=2, got first=")
+      (display first-affected)
+      (display " second=")
+      (display second-affected)
+      (display ")")
+      (newline))
+    (begin
+      (display ";;; affected_rows updates after each query PASSED")
+      (newline)))
+
+
 ;; Clean up
 (dbi-query db-obj "DROP TABLE dbi_test_table")
 (dbi-close db-obj)
