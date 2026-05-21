@@ -36,7 +36,7 @@ void __test_make_g_db_handle(gdbi_db_handle_t* dbh);
 void __test_close_g_db_handle(gdbi_db_handle_t* dbh);
 void __test_query_g_db_handle(gdbi_db_handle_t* dbh, char* query);
 SCM __test_getrow_g_db_handle(gdbi_db_handle_t* dbh);
-int __test_affected_rows_g_db_handle(gdbi_db_handle_t* dbh);
+long long __test_affected_rows_g_db_handle(gdbi_db_handle_t* dbh);
 
 typedef struct gdbi_test_ds
 {
