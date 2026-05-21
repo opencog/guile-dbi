@@ -81,6 +81,23 @@
 ;; Capture results before test-end clears the runner
 (define test-result (test-runner-fail-count (test-runner-current)))
 
+(test-assert "dbi-affected-rows returns integer after open"
+  (integer? (dbi-affected-rows dbh)))
+
+(test-assert "dbi-affected-rows returns 0 after open"
+  (zero? (dbi-affected-rows dbh)))
+
+(test-assert "dbi-affected-rows returns integer after query"
+  (begin
+    (dbi-query dbh "select * from test;")
+    (integer? (dbi-affected-rows dbh))))
+
+(test-assert "dbi-affected-rows returns 0 after query"
+  (begin
+    (dbi-query dbh "select * from test;")
+    (zero? (dbi-affected-rows dbh))))
+
+
 (test-end "guile-dbi")
 
 ;; Exit with proper status for make check
