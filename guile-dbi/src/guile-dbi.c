@@ -304,7 +304,7 @@ SCM_DEFINE (affected_rows_g_db_handle, "dbi-affected-rows", 1, 0, 0,
     return SCM_BOOL_F;
 
   scm_remember_upto_here_1 (db_handle);
-  return scm_from_int (g_db_handle->affected_rows);
+  return scm_from_long_long (g_db_handle->affected_rows);
 }
 #undef FUNC_NAME
 
