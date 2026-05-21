@@ -46,14 +46,19 @@
 
 ;; Temporary SQLite file
 
-(define db-path
-  (string-append "/tmp/guile-dbi-test-" (symbol->string (gensym)) ".sqlite"))
+(define db-path "/tmp/guile-dbi-test.sqlite")
 
 (display ";;; Using SQLite database: ")
 (display db-path)
 (newline)
 
 ;; Open connection
+
+(when (file-exists? db-path)
+  (display ";;; Removing existing database file: ")
+  (display db-path)
+  (newline)
+  (delete-file db-path))
 
 (define db-obj (dbi-open "sqlite3" db-path))
 
