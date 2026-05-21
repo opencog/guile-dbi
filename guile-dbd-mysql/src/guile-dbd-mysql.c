@@ -311,6 +311,7 @@ void __mysql_query_g_db_handle (gdbi_db_handle_t *dbh, char *query)
     return;
   }
 
+  dbh->affected_rows = mysql_affected_rows (mysqlP->mysql);
   mysqlP->res = mysql_use_result (mysqlP->mysql);
   if (mysqlP->res == NULL)
   {
@@ -318,7 +319,6 @@ void __mysql_query_g_db_handle (gdbi_db_handle_t *dbh, char *query)
     return;
   }
 
-  dbh->affected_rows = mysql_affected_rows (mysqlP->mysql);
   dbh->status = scm_cons (scm_from_int (0), scm_from_locale_string ("query ok, got results"));
 
   return;
