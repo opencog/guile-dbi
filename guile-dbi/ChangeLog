@@ -1,3 +1,6 @@
+Version 3.2.1 (2026-XXX TBD)
+	* Add support for affected_rows in all backends.
+
 Version 3.2.0 (2026-05-04)
 	* Add MySQL support for TINY, SHORT and LONGLONG types. (#19)
 	* Add Postgres support for assorted column types. (#20)

@@ -30,7 +30,7 @@ so, for now, things seem OK.
 
 Status
 ------
-* ***Version 3.2.0*** -- stable, reliable, "feature complete".
+* ***Version 3.2.1*** -- stable, reliable, "feature complete".
 
 Documentation
 -------------
