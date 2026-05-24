@@ -1,5 +1,6 @@
 Version 3.2.1 (2026-XXX TBD)
 	* Add support for affected_rows in all backends.
+	* Get rid of old, unused ChangeLogs in all the subdirs.
 
 Version 3.2.0 (2026-05-04)
 	* Add MySQL support for TINY, SHORT and LONGLONG types. (#19)
