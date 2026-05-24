@@ -47,9 +47,9 @@ autoheader 2>> autogen.err || {
 # Produce all the `GNUmakefile.in's and create neat missing things
 # like `install-sh', etc.
 # 
-echo "automake --add-missing --copy --foreign"
+echo "automake --add-missing --copy"
 
-automake --add-missing --copy --foreign 2>> autogen.err || {
+automake --add-missing --copy 2>> autogen.err || {
     echo ""
     echo "* * * warning: possible errors while running automake - check autogen.err"
     echo ""

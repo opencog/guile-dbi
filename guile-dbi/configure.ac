@@ -27,7 +27,7 @@ AC_INIT([guile-dbi],[3.2.1],[bug-guile@gnu.org])
 DBI_INTERFACE="5:0:1"
 AC_SUBST([DBI_INTERFACE])
 
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([foreign])
 AM_MAINTAINER_MODE
 AC_CONFIG_SRCDIR([config.h.in])
 AC_CONFIG_HEADERS([config.h])
