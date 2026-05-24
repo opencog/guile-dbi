@@ -136,9 +136,9 @@ In the file download area, there are dbi and driver tarballs.
 @chapter Tutorial
 
 The Scheme interface is very simple.
-There are only 6 functions: @code{dbi-open},
+There are only 7 functions: @code{dbi-open},
 @code{dbi-close}, @code{dbi-query}, @code{dbi-params-query},
-@code{dbi-get_status} and @code{dbi-get_row}.
+@code{dbi-get_status}, @code{dbi-get_row} and @code{dbi-affected-rows}.
 
 @*
 Guile DBI supports any database for which a DBD backend is written.
@@ -356,6 +356,38 @@ handle object.
 @end deffn
 
 
+@deffn Primitive dbi-affected-rows db-handle
+
+Return the number of rows affected by the most recently executed
+@code{dbi-query} or @code{dbi-params-query} on @var{db-handle}.
+
+The value is meaningful only after a data-manipulation statement (INSERT,
+UPDATE, DELETE).  For SELECT statements the value is driver-dependent:
+
+@itemize @bullet
+@item @strong{SQLite3}: always 0 (sqlite3_changes() returns 0 for queries
+that produce a result set).
+@item @strong{PostgreSQL}: always 0 (PQcmdTuples() returns an empty string
+for SELECT; atoll("") == 0).
+@item @strong{MySQL / MariaDB}: -1 (mysql_affected_rows() returns the
+special sentinel value (my_ulonglong)-1 for statements that return a
+result set, per the MariaDB documentation).
+@end itemize
+
+The return value is an exact integer.  The value is reset to 0 by
+@code{dbi-open} and updated by every subsequent query call.
+
+Example:
+@example
+(dbi-query db "insert into t values (1), (2), (3)")
+(display (dbi-affected-rows db))   @result{} 3
+
+(dbi-params-query db "delete from t where id = ?" '(1))
+(display (dbi-affected-rows db))   @result{} 1
+@end example
+@end deffn
+
+
 @deffn Primitive dbi-get_row db-handle
 
 Called after @code{dbi-query} or @code{dbi-params-query}, returns the
@@ -445,6 +477,7 @@ typedef struct g_db_handle
   lt_dlhandle handle;
   void* db_info;
   int in_free; /* boolean, used to avoid alloc during garbage collection */
+  long long affected_rows; /* rows affected by the last DML query */
 @} gdbi_db_handle_t;
 @end example
 
@@ -464,6 +497,9 @@ Set to ``NULL'' at connection close.
 hook.  Set to ``NULL'' at connection close.
 @item @code{in_free} Boolean flag, used to avoid alloc during garbage
 collection.
+@item @code{affected_rows} Number of rows affected by the last INSERT,
+UPDATE or DELETE.  Set to 0 by @code{dbi-open} and written by the DBD
+plugin after each query.  Read by @code{dbi-affected-rows}.
 @end itemize
 
 
@@ -592,6 +628,17 @@ are available a @code{#f} must be returned.
 A returned row must be an association list, that is, a list of pairs
 whose car is the field name and cdr is it's value (if possible, the
 value should use the closest possible guile/scheme type).
+
+@sp 1
+
+Plugins are also expected to update the @code{affected_rows} field of
+@code{gdbi_db_handle_t} inside the query and params-query functions.
+Set @code{dbh->affected_rows} to the number of rows changed by the
+statement (as reported by the backend's native API, e.g.@:
+@code{mysql_affected_rows()}, @code{sqlite3_changes()}, or
+@code{atoll(PQcmdTuples(res))}).  For SELECT statements, set it to 0
+(or to the backend's natural sentinel, e.g.@: @minus{}1 for MySQL).
+This value is exposed to Scheme via @code{dbi-affected-rows}.
 
 @sp 1
 @*
