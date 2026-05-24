@@ -24,7 +24,7 @@ AC_PREREQ([2.69])
 AC_INIT([guile-dbd-mysql],[3.2.1],[bug-guile@gnu.org])
 
 # Interfaces is format CURRENT:REVISION:AGE
-DBD_INTERFACE="4:0:0"
+DBD_INTERFACE="5:0:1"
 AC_SUBST([DBD_INTERFACE])
 
 AM_INIT_AUTOMAKE
