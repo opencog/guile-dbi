@@ -30,4 +30,5 @@
         dbi-params-query
         dbi-query
         dbi-get_row
-        dbi-get_status)
+        dbi-get_status
+        dbi-affected-rows)

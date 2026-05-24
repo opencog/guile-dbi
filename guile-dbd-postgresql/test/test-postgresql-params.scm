@@ -54,11 +54,11 @@
 
 ;;; Format: "user:pass:db:socket-or-tcp:host[:port]"
 (define *db-conn-str*
-  (let ((user (or (getenv "PGUSER")     "test"))
-        (pass (or (getenv "PGPASSWORD") ""))
-        (db   (or (getenv "PGDATABASE") "test"))
-        (host (or (getenv "PGHOST")     "localhost"))
-        (port (or (getenv "PGPORT")     "5432")))
+  (let ((user (or (getenv "DBI_TEST_PGUSER")     "test"))
+        (pass (or (getenv "DBI_TEST_PGPASS") ""))
+        (db   (or (getenv "DBI_TEST_PGDB") "test"))
+        (host (or (getenv "DBI_TEST_PGHOST")     "localhost"))
+        (port (or (getenv "DBI_TEST_PGPORT")     "5432")))
     (format #f "~a:~a:~a:tcp:~a:~a" user pass db host port)))
 
 ;;; ── tiny test framework ──────────────────────────────────────────────────────

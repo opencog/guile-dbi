@@ -251,31 +251,48 @@ void __sqlite3_params_query_g_db_handle(
 
     /* ================= EXECUTE PROBE ================= */
 
-    rc = sqlite3_step(stmt);
+   rc = sqlite3_step (stmt);
 
-    /* non-select or no row */
-    if (rc == SQLITE_DONE)
-    {
-        dbh->status = status_cons(0, "query ok");
-        sqlite3_finalize(stmt);
-        db_info->stmt = NULL;
-        return;
-    }
+   int col_count = sqlite3_column_count (stmt);
 
-    /* SELECT with rows */
-    if (rc == SQLITE_ROW)
-    {
-      db_info->cached_row = convert_row (stmt);
-      db_info->has_cached_row = 1;
+   if (col_count == 0)
+   {
+     /* DML */
+     if (rc != SQLITE_DONE)
+       dbh->status = status_cons (1, sqlite3_errmsg (db_info->sqlite3_obj));
+     else
+     {
+       dbh->status = status_cons (0, "query ok");
+       dbh->affected_rows = sqlite3_changes (db_info->sqlite3_obj);
+     }
+     sqlite3_finalize (stmt);
+     db_info->stmt = NULL;
+     return;
+   }
 
-      db_info->stmt = stmt;
+   /* SELECT query */
+   if (rc == SQLITE_ROW)
+   {
+     db_info->cached_row = convert_row (stmt);
+     db_info->has_cached_row = 1;
+     db_info->stmt = stmt;
+     dbh->status = status_cons (0, "query ok");
+     dbh->affected_rows = 0;
+     return;
+   }
 
-      dbh->status = status_cons (0, "query ok");
-      return;
-    }
+   /* empty SELECT */
+   if (rc == SQLITE_DONE)
+   {
+     dbh->status = status_cons (0, "query ok");
+     dbh->affected_rows = 0;
+     sqlite3_finalize (stmt);
+     db_info->stmt = NULL;
+     return;
+   }
 
-    /* error */
-    dbh->status = status_cons (1, sqlite3_errmsg (db_info->sqlite3_obj));
+  /* error */
+  dbh->status = status_cons (1, sqlite3_errmsg (db_info->sqlite3_obj));
 
 error:
   if (stmt)
@@ -309,15 +326,21 @@ void __sqlite3_query_g_db_handle (gdbi_db_handle_t *dbh, char *query_str)
     return;
   }
 
-  /* Check if the query is a SELECT statement (has columns) */
-  if (sqlite3_column_count (stmt) == 0)
+  int col_count = sqlite3_column_count (stmt);
+
+  if (0 == col_count)
   {
-    /* If no result rows, execute and return immediately */
+    /* DML or no-column statement */
     rc = sqlite3_step (stmt);
     if (rc != SQLITE_DONE)
+    {
       dbh->status = status_cons (1, sqlite3_errmsg (db_info->sqlite3_obj));
+    }
     else
+    {
       dbh->status = status_cons (0, "query ok");
+      dbh->affected_rows = sqlite3_changes (db_info->sqlite3_obj);
+    }
 
     sqlite3_finalize (stmt);
     db_info->stmt = NULL;
@@ -335,6 +358,17 @@ void __sqlite3_query_g_db_handle (gdbi_db_handle_t *dbh, char *query_str)
     // Store the stmt for subsequent use
     db_info->stmt = stmt;
     dbh->status = status_cons (0, "query ok");
+    dbh->affected_rows = 0;
+    return;
+  }
+
+  /* empty result set */
+  if (rc == SQLITE_DONE)
+  {
+    dbh->status = status_cons (0, "query ok");
+    dbh->affected_rows = 0;
+    sqlite3_finalize (stmt);
+    db_info->stmt = NULL;
     return;
   }
 

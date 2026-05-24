@@ -38,6 +38,7 @@ typedef struct
   int in_free;  /* boolean, used to avoid alloc during garbage collection */
   const char * bcknd_str;
   size_t bcknd_strlen;
+  unsigned long long affected_rows; /* number of rows affected by last query */
 } gdbi_db_handle_t;
 /* end guile smob struct */
 

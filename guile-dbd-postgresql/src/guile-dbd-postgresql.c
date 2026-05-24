@@ -264,6 +264,7 @@ void __postgresql_query_g_db_handle (gdbi_db_handle_t *dbh, char *query)
   {
     dbh->status
       = scm_cons (scm_from_int (0), scm_from_utf8_string ("query ok"));
+    dbh->affected_rows = atoll (PQcmdTuples (pgsqlP->res));
   }
   else
   {
@@ -738,6 +739,7 @@ cleanup:
   {
     g_db_handle->status
       = scm_cons (scm_from_int (0), scm_from_utf8_string ("query ok"));
+    g_db_handle->affected_rows = atoll (PQcmdTuples (res));
     pgsqlP->lget = 0;
     pgsqlP->is_params = 1;
     /* clear previous result before assigning new one */
