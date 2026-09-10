@@ -40,7 +40,8 @@
 
 (use-modules (dbi dbi)
              (ice-9 format)
-             (ice-9 match))
+             (ice-9 match)
+             (srfi srfi-1))
 
 ;;; ── connection string ────────────────────────────────────────────────────────
 ;;; Test prepare:
@@ -114,7 +115,16 @@
 
 ;; Create a scratch table covering all OID branches we care about.
 (exec! db "DROP TABLE IF EXISTS _dbi_param_test")
-(exec! db "
+
+;; pgvector is optional -- CREATE EXTENSION IF NOT EXISTS is itself the
+;; probe: if it fails (no pgvector package installed on this server at
+;; all, as opposed to just "not enabled in this database"), skip the
+;; vector column and its test rather than failing the whole suite.
+(dbi-query db "CREATE EXTENSION IF NOT EXISTS vector")
+(define has-vector? (= 0 (car (dbi-get_status db))))
+
+(exec! db
+  (string-append "
 CREATE TABLE _dbi_param_test (
   id          SERIAL PRIMARY KEY,
   col_bool    BOOLEAN,
@@ -132,8 +142,9 @@ CREATE TABLE _dbi_param_test (
   col_int8arr BIGINT[],
   col_json    JSON,
   col_jsonb   JSONB,
-  col_uuid    UUID
-)")
+  col_uuid    UUID"
+    (if has-vector? ",\n  col_vector  VECTOR(3)" "")
+    "\n)"))
 
 ;; Row 1: fully populated
 (exec! db "
@@ -153,6 +164,11 @@ VALUES
    '{\"key\":\"val\"}',
    '{\"k\":1}',
    'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11')")
+
+;; Row 1's vector value, set separately so the main INSERT above stays
+;; identical whether or not pgvector is installed.
+(when has-vector?
+  (exec! db "UPDATE _dbi_param_test SET col_vector = '[0.5,1.5,2.5]' WHERE col_text = 'hello params'"))
 
 ;; Row 2: NULLs for every nullable column
 (exec! db "
@@ -202,6 +218,13 @@ VALUES
   (check-true!        "json is string"           (string? (col row "col_json")))
   (check-true!        "jsonb is string"          (string? (col row "col_jsonb")))
   (check-true!        "uuid is string"           (string? (col row "col_uuid")))
+  ;; pgvector -> string, same as json/jsonb/uuid: this driver hands back
+  ;; the type's text representation, not parsed Scheme numbers -- decoding
+  ;; "[0.5,1.5,2.5]" into a list of floats, if ever needed, is
+  ;; application-side work.
+  (when has-vector?
+    (check-true!      "vector is string"          (string? (col row "col_vector")))
+    (check!           "vector text form"          (col row "col_vector") "[0.5,1.5,2.5]"))
   ;; Drain remaining rows
   (fetch-all db))
 
@@ -221,6 +244,8 @@ VALUES
   (check-unspecified! "null float4"             (col row "col_float4"))
   (check-unspecified! "null float8"             (col row "col_float8"))
   (check-unspecified! "null numeric"            (col row "col_numeric"))
+  (when has-vector?
+    (check-unspecified! "null vector"           (col row "col_vector")))
   (check-unspecified! "null text"               (col row "col_text"))
   (check-unspecified! "null int4arr"            (col row "col_int4arr"))
   (fetch-all db))
@@ -289,6 +314,36 @@ VALUES
     (let ((row (fetch-one db)))
       (check! "recovery after error" (col row "msg") "recovered")
       (fetch-all db))))
+
+;;; ── teardown ─────────────────────────────────────────────────────────────────
+;;; ── Test 9: float edge cases -- NaN / Infinity (regression) ─────────────────
+;;; Guards the bug where the PQexec path silently turned real NaN/Infinity
+;;; float4/float8 values into 0.0 (Guile's number reader doesn't recognize
+;;; postgres's bare "NaN"/"Infinity" text form and the old fallback assumed
+;;; parse failure meant "just use zero"). This exercises the PQexec path
+;;; specifically (exec!, not params-exec!), since that's the path that had
+;;; the bug -- the params path already used plain atof and was never broken.
+(format #t "\n-- Test 9: float NaN/Infinity (PQexec path regression) --\n")
+
+(exec! db "DROP TABLE IF EXISTS _dbi_float_edge_test")
+(exec! db "CREATE TABLE _dbi_float_edge_test (label TEXT, val DOUBLE PRECISION)")
+(exec! db "INSERT INTO _dbi_float_edge_test VALUES
+  ('nan', 'NaN'::double precision),
+  ('pinf', 'Infinity'::double precision),
+  ('ninf', '-Infinity'::double precision)")
+
+(exec! db "SELECT label, val FROM _dbi_float_edge_test ORDER BY label")
+(let ((rows (fetch-all db)))
+  (define (val-for label)
+    (and=> (find (lambda (r) (equal? (col r "label") label)) rows)
+           (lambda (r) (col r "val"))))
+  (check-true! "nan is real and not zero"
+               (let ((v (val-for "nan"))) (and (real? v) (not (= v 0.0)))))
+  (check-true! "+inf is real and not zero"
+               (let ((v (val-for "pinf"))) (and (real? v) (not (= v 0.0)))))
+  (check-true! "-inf is real and not zero"
+               (let ((v (val-for "ninf"))) (and (real? v) (not (= v 0.0))))))
+(exec! db "DROP TABLE IF EXISTS _dbi_float_edge_test")
 
 ;;; ── teardown ─────────────────────────────────────────────────────────────────
 (exec! db "DROP TABLE IF EXISTS _dbi_param_test")

@@ -44,6 +44,14 @@ typedef struct
   int lget;
   int retn;
   int is_params; /* 1 = came from PQexecParams, 0 = came from PQexec */
+  /* pgvector's `vector' type has no compile-time-stable OID like the
+     built-ins in pg_oid.h -- CREATE EXTENSION vector assigns it
+     dynamically, and it differs per database/installation. Looked up
+     once per connection and cached here. 0 (InvalidOid) means "not
+     installed on this database" -- not an error, just means this
+     connection will never see a vector column, so the cached value
+     never matches any real column type. */
+  Oid vector_oid;
 } gdbi_pgsql_ds_t;
 
 static void dbi_set_error (gdbi_db_handle_t *dbh, const char *msg)
@@ -158,6 +166,23 @@ void __postgresql_make_g_db_handle (gdbi_db_handle_t *dbh)
     }
     else
     {
+      /* pgvector's `vector' type has no stable compile-time OID (see
+         struct comment) -- look it up once now, while we know the
+         connection is good. A miss (query fails, or 0 rows because the
+         extension isn't installed on this database) is not a
+         connection error: it just means vector_oid stays 0 and no
+         column will ever match it. */
+      PGresult *voidres = PQexec (pgsqlP->pgsql,
+                                  "SELECT oid FROM pg_type WHERE typname = 'vector'");
+      pgsqlP->vector_oid = 0;
+      if (voidres && PQresultStatus (voidres) == PGRES_TUPLES_OK
+          && PQntuples (voidres) == 1)
+      {
+        pgsqlP->vector_oid = (Oid) atoi (PQgetvalue (voidres, 0, 0));
+      }
+      if (voidres)
+        PQclear (voidres);
+
       /* todo: error msg to be translated */
       dbh->status
         = scm_cons (scm_from_int (0), scm_from_utf8_string ("db connected"));
@@ -426,13 +451,22 @@ static SCM getrow_for_params (gdbi_db_handle_t *dbh)
       break;
 
     default:
-    {
+      /* pgvector: OID isn't known at compile time, so it can't be its
+         own `case' label -- checked here at runtime instead, against
+         the value looked up once at connection time. Text output looks
+         like "[0.1,0.2,0.3]"; decoding it into actual numbers, if ever
+         needed, is Scheme-side work, not this driver's job. */
+      if (pgsqlP->vector_oid != 0 && type == pgsqlP->vector_oid)
+      {
+        value = scm_from_locale_stringn (vstr, vlen);
+        break;
+      }
+
       char msg[101];
       snprintf (msg, 100, "unknown field type %d for %s", type, fname);
       dbh->status = scm_cons (scm_from_int (1), scm_from_utf8_string (msg));
       pgsqlP->lget++;
       return SCM_BOOL_F;
-    }
     }
 
     retrow = scm_append (scm_list_2 (
@@ -554,9 +588,15 @@ SCM __postgresql_getrow_g_db_handle (gdbi_db_handle_t *dbh)
 
     case FLOAT4OID:
     case FLOAT8OID:
-      value = scm_c_locale_stringn_to_number (vstr, strlen (vstr), 10);
-      if (scm_is_false (value))
-        value = scm_from_double (0.0);
+      /* atof (via strtod) correctly parses postgres's literal "NaN" /
+         "Infinity" / "-Infinity" text output per C99 (confirmed:
+         atof("NaN") -> nan, atof("Infinity") -> inf). Guile's own
+         number reader does NOT recognize these bare forms (confirmed:
+         (string->number "NaN") => #f) -- the previous code's
+         scm_is_false-then-0.0 fallback silently turned real NaN/
+         Infinity values into 0.0. This now matches the params-path's
+         float handling below, which never had this bug. */
+      value = scm_from_double (atof (vstr));
       break;
 
     case MONEYOID:
@@ -621,13 +661,25 @@ SCM __postgresql_getrow_g_db_handle (gdbi_db_handle_t *dbh)
       break;
 
     default:
-    {
+      /* pgvector: OID isn't known at compile time, so it can't be its
+         own `case' label -- checked here at runtime instead, against
+         the value looked up once at connection time. Text output looks
+         like "[0.1,0.2,0.3]"; decoding it into actual numbers, if ever
+         needed, is Scheme-side work, not this driver's job. This path
+         has no shared vlen variable (unlike getrow_for_params), so
+         length is computed locally, same as BYTEAOID's case above. */
+      if (pgsqlP->vector_oid != 0 && type == pgsqlP->vector_oid)
+      {
+        size_t vveclen = PQgetlength (pgsqlP->res, pgsqlP->lget, f);
+        value = scm_from_locale_stringn (vstr, vveclen);
+        break;
+      }
+
       char msg[101];
       snprintf (msg, 100, "unknown field type %d for %s", type, fname);
       dbh->status = scm_cons (scm_from_int (1), scm_from_utf8_string (msg));
       pgsqlP->lget++;
       return SCM_BOOL_F;
-    }
     }
 
     retrow = scm_append (scm_list_2 (
