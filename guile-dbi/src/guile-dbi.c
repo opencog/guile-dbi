@@ -22,11 +22,22 @@
 
 #include <errno.h>
 #include <guile-dbi/guile-dbi.h>
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 static scm_t_bits g_db_handle_tag;
+
+/* libltdl keeps process-global state (module list, search path, last
+   error) and guile-dbi never registers lt_dlmutex handlers, so it is not
+   thread-safe. The backend is loaded and unloaded once per connection, so
+   any concurrent dbi-open reaches lt_dlopenext/lt_dlclose: racing them
+   corrupts libltdl state (observed as a segfault under a 16-thread
+   open/close loop). Serialize load/unload; both calls are short. The
+   separate lt_dlerror() false-negative in __gdbi_dbd_wrap is fixed
+   below. */
+static pthread_mutex_t g_dl_lock = PTHREAD_MUTEX_INITIALIZER;
 
 #define DBI_SMOB_P(obj) \
   ((SCM_NIMP (obj)) && (SCM_TYP16 (obj) == g_db_handle_tag))
@@ -68,14 +79,24 @@ SCM_DEFINE (make_g_db_handle, "dbi-open", 2, 0, 0, (SCM bcknd, SCM conn_string),
 
   snprintf (sodbd, sodbd_len, "libguile-dbd-%s", g_db_handle->bcknd_str);
 
+  pthread_mutex_lock (&g_dl_lock);
   g_db_handle->handle = lt_dlopenext (sodbd);
   if (g_db_handle->handle == NULL)
   {
+    /* lt_dlerror() may be overwritten by another thread's libltdl call,
+       so copy the message before releasing the lock. */
+    const char *dl_err = lt_dlerror ();
+    char *dl_msg = strdup (dl_err ? dl_err : "dynamic loader error");
+    pthread_mutex_unlock (&g_dl_lock);
     free (sodbd);
     g_db_handle->status
-      = scm_cons (scm_from_int (1), scm_from_locale_string (lt_dlerror ()));
+      = scm_cons (scm_from_int (1),
+                  scm_from_locale_string (dl_msg ? dl_msg
+                                                 : "dynamic loader error"));
+    free (dl_msg);
     SCM_RETURN_NEWSMOB (g_db_handle_tag, g_db_handle);
   }
+  pthread_mutex_unlock (&g_dl_lock);
 
   __gdbi_dbd_wrap (g_db_handle, __FUNCTION__, (void **)&connect);
   if (scm_equal_p (SCM_CAR (g_db_handle->status), scm_from_int (0))
@@ -163,7 +184,9 @@ SCM_DEFINE (close_g_db_handle, "dbi-close", 1, 0, 0, (SCM db_handle),
   (*dbd_close) (g_db_handle);
   if (g_db_handle->handle)
   {
+    pthread_mutex_lock (&g_dl_lock);
     lt_dlclose (g_db_handle->handle);
+    pthread_mutex_unlock (&g_dl_lock);
     g_db_handle->handle = NULL;
   }
 
@@ -361,7 +384,6 @@ void init_dbi (void)
 void __gdbi_dbd_wrap (gdbi_db_handle_t *dbh, const char *function_name,
                       void **function_pointer)
 {
-  const char *ret = NULL;
   char *func = NULL;
   size_t func_len;
 
@@ -378,14 +400,26 @@ void __gdbi_dbd_wrap (gdbi_db_handle_t *dbh, const char *function_name,
 
   /* I assume this is correct for all OS'es */
   snprintf (func, func_len, "__%s_%s", dbh->bcknd_str, function_name);
-  lt_dlerror (); /* Clear any existing error -- Solaris needs this */
+  /* lt_dlsym() returns NULL on failure. Do NOT test lt_dlerror() here:
+     libltdl's last-error slot is process-global, so a concurrent call in
+     another thread can leave "file not found" there even though the
+     symbol was found. That turned into a bogus "file not found"
+     connection status under concurrency. */
   *function_pointer = lt_dlsym (dbh->handle, func);
-  if ((ret = lt_dlerror ()) != NULL)
+  if (*function_pointer == NULL)
   {
+    const char *err = lt_dlerror ();
+    char *err_msg = err ? strdup (err) : NULL;
     free (func);
     if (dbh->in_free)
+    {
+      free (err_msg);
       return; /* do not SCM anything while in GC */
-    dbh->status = scm_cons (scm_from_int (1), scm_from_locale_string (ret));
+    }
+    dbh->status = scm_cons (scm_from_int (1),
+                            scm_from_locale_string (err_msg ? err_msg
+                                                           : "symbol not found"));
+    free (err_msg);
     return;
   }
 
