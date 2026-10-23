@@ -448,10 +448,25 @@ SCM getrow_common (gdbi_db_handle_t *dbh)
     SCM value;
     char *value_str = NULL;
 
+    /* SQL NULL: mysql_fetch_row sets row[f] to NULL for a NULL cell in ANY
+       column type.  Encode it as SCM_UNSPECIFIED, matching getrow_for_stmt
+       (the prepared-statement path) and the postgresql/sqlite3 drivers.
+       Without this check a NULL in a normally-typed column falls through to
+       strndup (NULL, 0), which yields "" instead.  The pg driver's equivalent
+       branch carries the comment "mirrors MySQL getrow_for_stmt is_null[f]
+       check"; this makes that mirror real.  */
+    if (row[f] == NULL)
+    {
+      value = SCM_UNSPECIFIED;
+      retrow = scm_append (scm_list_2 (
+        retrow, scm_list_1 (scm_cons (scm_from_locale_string (fields[f].name), value))));
+      continue;
+    }
+
     switch (fields[f].type)
     {
     case FIELD_TYPE_NULL:
-      value = SCM_BOOL_F;
+      value = SCM_UNSPECIFIED;
       break;
     case FIELD_TYPE_TINY:
     case FIELD_TYPE_SHORT:
