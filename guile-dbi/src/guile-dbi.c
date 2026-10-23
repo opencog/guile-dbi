@@ -182,13 +182,14 @@ SCM_DEFINE (close_g_db_handle, "dbi-close", 1, 0, 0, (SCM db_handle),
   }
 
   (*dbd_close) (g_db_handle);
+
+  pthread_mutex_lock (&g_dl_lock);
   if (g_db_handle->handle)
   {
-    pthread_mutex_lock (&g_dl_lock);
     lt_dlclose (g_db_handle->handle);
-    pthread_mutex_unlock (&g_dl_lock);
     g_db_handle->handle = NULL;
   }
+  pthread_mutex_unlock (&g_dl_lock);
 
   scm_remember_upto_here_1 (db_handle);
   return SCM_UNSPECIFIED;
