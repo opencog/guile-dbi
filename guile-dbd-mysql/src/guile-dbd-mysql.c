@@ -50,6 +50,7 @@ void __mysql_close_g_db_handle (gdbi_db_handle_t *dbh);
 void __mysql_query_g_db_handle (gdbi_db_handle_t *dbh, char *query);
 void __mysql_params_query_g_db_handle (gdbi_db_handle_t *dbh, const char *query, int argc, const SCM *argv);
 SCM __mysql_getrow_g_db_handle (gdbi_db_handle_t *dbh);
+void __mysql_conn_reset_g_db_handle (gdbi_db_handle_t *dbh);
 
 typedef struct
 {
@@ -81,6 +82,52 @@ static void free_binds (MYSQL_BIND *binds, int cnt)
   }
 
   free (binds);
+}
+
+/* Drop every result set, prepared statement and bound buffer this handle
+   owns, without closing the connection. A caller that stopped reading a
+   result leaves the connection busy; no new command can be sent until
+   these are released. Shared by dbi-close and dbi-conn-reset. */
+static void free_session_resources (gdbi_mysql_ds_t *mysqlP)
+{
+  if (mysqlP->result_bind)
+  {
+    free_binds (mysqlP->result_bind, mysqlP->num_fields);
+    mysqlP->result_bind = NULL;
+  }
+
+  if (mysqlP->is_null)
+  {
+    free (mysqlP->is_null);
+    mysqlP->is_null = NULL;
+  }
+
+  if (mysqlP->lengths)
+  {
+    free (mysqlP->lengths);
+    mysqlP->lengths = NULL;
+  }
+
+  if (mysqlP->meta)
+  {
+    mysql_free_result (mysqlP->meta);
+    mysqlP->meta = NULL;
+  }
+
+  if (mysqlP->stmt)
+  {
+    mysql_stmt_free_result (mysqlP->stmt);
+    mysql_stmt_close (mysqlP->stmt);
+    mysqlP->stmt = NULL;
+  }
+
+  if (mysqlP->res)
+  {
+    mysql_free_result (mysqlP->res);
+    mysqlP->res = NULL;
+  }
+
+  mysqlP->num_fields = 0;
 }
 
 void __mysql_make_g_db_handle (gdbi_db_handle_t *dbh)
@@ -322,6 +369,47 @@ void __mysql_query_g_db_handle (gdbi_db_handle_t *dbh, char *query)
   dbh->status = scm_cons (scm_from_int (0), scm_from_locale_string ("query ok, got results"));
 
   return;
+}
+
+/* Reset a pooled connection before another caller borrows it. MySQL has
+   a protocol-level COM_RESET_CONNECTION (mysql_reset_connection) that
+   re-authenticates the session on the server: prepared statements,
+   temporary tables, user variables, SET variables and autocommit all
+   return to their defaults. SQL alone cannot clear user variables or
+   temporary tables, so this is the only complete reset.
+
+   The command is atomic and also discards an open transaction server-side;
+   there is no way to reset the session state and keep the transaction, so
+   the DBD issues no SQL transaction handling of its own. Servers older than
+   MySQL 5.7.3 / MariaDB 10.2 reject the command; there is no
+   non-transactional fallback, so report the error and let the caller
+   replace the connection. Result sets and statements this handle still
+   owns are released first: the server refuses new commands while one is
+   open, and COM_RESET_CONNECTION must not be sent on a busy connection. */
+void __mysql_conn_reset_g_db_handle (gdbi_db_handle_t *dbh)
+{
+  gdbi_mysql_ds_t *mysqlP = (gdbi_mysql_ds_t *)dbh->db_info;
+
+  if (mysqlP == NULL || mysqlP->mysql == NULL)
+  {
+    dbh->status = scm_cons (scm_from_int (1),
+                            scm_from_locale_string ("invalid dbi connection"));
+    return;
+  }
+
+  free_session_resources (mysqlP);
+
+  if (mysql_reset_connection (mysqlP->mysql) != 0)
+  {
+    dbh->status
+      = scm_cons (scm_from_int (mysqlP->mysql->net.last_errno),
+                  scm_from_locale_string (mysql_error (mysqlP->mysql)));
+    return;
+  }
+
+  dbh->affected_rows = 0;
+  dbh->status = scm_cons (scm_from_int (0),
+                          scm_from_locale_string ("connection reset"));
 }
 
 SCM static getrow_for_stmt (gdbi_db_handle_t *dbh)
