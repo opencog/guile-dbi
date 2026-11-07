@@ -27,6 +27,7 @@
 
 (export dbi-open
         dbi-close
+        dbi-conn-reset
         dbi-params-query
         dbi-query
         dbi-get_row

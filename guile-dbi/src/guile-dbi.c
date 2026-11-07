@@ -196,6 +196,61 @@ SCM_DEFINE (close_g_db_handle, "dbi-close", 1, 0, 0, (SCM db_handle),
 }
 #undef FUNC_NAME
 
+/* Reset the session state of a connection so that it can be reused by an
+   unrelated caller (a connection pool hands it out again). The backend
+   implements this as __<dbd>_conn_reset_g_db_handle; what "session state"
+   means is backend specific: SET variables, prepared statements, temporary
+   tables, LISTEN registrations, an unfinished result set, and so on.
+
+   Transactions are not part of it: the transaction layer commits or rolls
+   back before returning a connection, and a backend's reset refuses a
+   connection that still has one open rather than rolling back behind the
+   caller's back.
+
+   The backend reports success or failure through the usual handle status
+   - a caller must check dbi-get_status afterwards. A backend that does not
+   implement the primitive (an older libguile-dbd-*) leaves an error status
+   behind, which lets the caller replace the connection instead of reusing
+   it. The status is set to success before the lookup so a failure left by
+   the previous query does not mask a missing primitive. */
+SCM_DEFINE (conn_reset_g_db_handle, "dbi-conn-reset", 1, 0, 0,
+            (SCM db_handle),
+            "Reset the session state of a connection before reuse.")
+#define FUNC_NAME s_conn_reset_g_db_handle
+{
+  gdbi_db_handle_t *g_db_handle = NULL;
+  void (*dbd_reset) (gdbi_db_handle_t *);
+
+  SCM_ASSERT (DBI_SMOB_P (db_handle), db_handle, SCM_ARG1, FUNC_NAME);
+
+  g_db_handle = (gdbi_db_handle_t *)SCM_SMOB_DATA (db_handle);
+
+  if (g_db_handle->closed == SCM_BOOL_T)
+  {
+    if (!g_db_handle->in_free)
+      g_db_handle->status
+        = scm_cons (scm_from_int (1),
+                    scm_from_utf8_string ("cannot reset a closed connection"));
+    scm_remember_upto_here_1 (db_handle);
+    return SCM_UNSPECIFIED;
+  }
+
+  g_db_handle->status
+    = scm_cons (scm_from_int (0), scm_from_utf8_string ("about to reset"));
+
+  __gdbi_dbd_wrap (g_db_handle, __FUNCTION__, (void **)&dbd_reset);
+  if (scm_equal_p (SCM_CAR (g_db_handle->status), scm_from_int (0))
+      == SCM_BOOL_T)
+  {
+    g_db_handle->affected_rows = 0;
+    (*dbd_reset) (g_db_handle);
+  }
+
+  scm_remember_upto_here_1 (db_handle);
+  return SCM_UNSPECIFIED;
+}
+#undef FUNC_NAME
+
 static size_t free_db_handle (SCM g_db_handle_smob)
 {
   gdbi_db_handle_t *g_db_handle = NULL;
