@@ -28,6 +28,7 @@ void __sqlite3_query_g_db_handle (gdbi_db_handle_t *dbh, char *query_str);
 void __sqlite3_params_query_g_db_handle (gdbi_db_handle_t *dbh, char *query,
                                          int argc, SCM *argv);
 SCM __sqlite3_getrow_g_db_handle (gdbi_db_handle_t *dbh);
+void __sqlite3_conn_reset_g_db_handle (gdbi_db_handle_t *dbh);
 SCM status_cons (int code, const char *message);
 
 // Define PERF_DEBUG to get perdiodic printing of time spent in this
@@ -376,6 +377,46 @@ void __sqlite3_query_g_db_handle (gdbi_db_handle_t *dbh, char *query_str)
   dbh->status = status_cons (1, sqlite3_errmsg (db_info->sqlite3_obj));
   sqlite3_finalize (stmt);
   db_info->stmt = NULL;
+}
+
+/* Reset a pooled connection before another caller borrows it. SQLite has
+   no per-session variables or temporary objects, so the non-transactional
+   state to discard is an unfinished statement (the previous caller may have
+   stopped reading a SELECT) and the cached row.
+
+   Transactions belong to the transaction layer; a connection returned with
+   one still open (sqlite3_get_autocommit() returns 0) is not rolled back
+   here -- handing it to another caller would let that caller's commit
+   cover the previous caller's uncommitted writes. The reset reports an
+   error instead and the caller replaces the connection. */
+void __sqlite3_conn_reset_g_db_handle (gdbi_db_handle_t *dbh)
+{
+  gdbi_sqlite3_ds_t *db_info = dbh->db_info;
+
+  /* db_info is only installed after a successful open and close frees it,
+     so a non-NULL db_info implies a live database handle. Check the handle
+     itself anyway: sqlite3_get_autocommit must not be handed NULL. */
+  if (!db_info || !db_info->sqlite3_obj)
+  {
+    dbh->status = status_cons (1, "invalid dbi connection");
+    return;
+  }
+
+  if (db_info->stmt)
+  {
+    sqlite3_finalize (db_info->stmt);
+    db_info->stmt = NULL;
+  }
+  db_info->has_cached_row = 0;
+  db_info->cached_row = SCM_UNDEFINED;
+
+  if (sqlite3_get_autocommit (db_info->sqlite3_obj) == 0)
+  {
+    dbh->status = status_cons (1, "connection has an open transaction");
+    return;
+  }
+
+  dbh->status = status_cons (0, "connection reset");
 }
 
 SCM __sqlite3_getrow_g_db_handle (gdbi_db_handle_t *dbh)

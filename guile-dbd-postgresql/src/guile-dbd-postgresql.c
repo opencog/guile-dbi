@@ -36,6 +36,7 @@ void __postgresql_query_g_db_handle (gdbi_db_handle_t *dbh, char *query);
 void __postgresql_params_query_g_db_handle (gdbi_db_handle_t *g_db_handle,
                                             char *query, int argc, SCM *argv);
 SCM __postgresql_getrow_g_db_handle (gdbi_db_handle_t *dbh);
+void __postgresql_conn_reset_g_db_handle (gdbi_db_handle_t *dbh);
 
 typedef struct
 {
@@ -297,6 +298,47 @@ void __postgresql_query_g_db_handle (gdbi_db_handle_t *dbh, char *query)
     PQclear (pgsqlP->res);
     pgsqlP->res = NULL;
   }
+}
+
+/* Reset a pooled connection before another caller borrows it. This covers
+   the non-transactional session state only: DISCARD ALL drops SET variables,
+   prepared statements, temporary tables, LISTEN registrations and cursor
+   plans.
+
+   Transactions belong to the transaction layer (with-transaction commits or
+   rolls back); a connection that is still inside one was not returned
+   properly, so the reset refuses it instead of rolling back behind the
+   caller's back. DISCARD ALL would be rejected inside a transaction block
+   anyway; PQtransactionStatus is client-side state, so the check costs no
+   round trip and produces a precise error.
+
+   A failure means the connection must not be reused: leave the error status
+   in place so the caller can replace it. The query wrapper also clears any
+   unconsumed PGresult from the previous caller. */
+void __postgresql_conn_reset_g_db_handle (gdbi_db_handle_t *dbh)
+{
+  gdbi_pgsql_ds_t *pgsqlP = (gdbi_pgsql_ds_t *)dbh->db_info;
+
+  /* db_info is only installed on a handle whose connection succeeded, and
+     close frees it and clears the pointer, so a non-NULL db_info implies a
+     live PGconn. Keep the explicit check anyway: the close path checks for
+     it too, and PQtransactionStatus must never be handed NULL. */
+  if (pgsqlP == NULL || pgsqlP->pgsql == NULL)
+  {
+    dbi_set_error (dbh, "invalid dbi connection");
+    return;
+  }
+
+  if (PQtransactionStatus (pgsqlP->pgsql) != PQTRANS_IDLE)
+  {
+    dbi_set_error (dbh, "connection has an open transaction");
+    return;
+  }
+
+  __postgresql_query_g_db_handle (dbh, "DISCARD ALL");
+  if (scm_to_int (SCM_CAR (dbh->status)) == 0)
+    dbh->status = scm_cons (scm_from_int (0),
+                            scm_from_utf8_string ("connection reset"));
 }
 
 static SCM getrow_for_params (gdbi_db_handle_t *dbh)
