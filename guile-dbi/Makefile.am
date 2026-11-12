@@ -1,3 +1,4 @@
+successfully downloaded text file (SHA: 270d65c454b64c6c85ee6826a7343c78ae55aa41)
 # Makefile.am - Main automake makefile
 # Copyright (C) 2004, 2005 Free Software Foundation, Inc.
 # Written by Maurizio Boriani <baux@member.fsf.org>
@@ -24,7 +25,7 @@ ACLOCAL_AMFLAGS = -I m4
 
 SUBDIRS = libltdl src include
 if HAVE_MAKEINFO
-	SUBDIRS += doc
+SUBDIRS += doc
 endif
 
 MAKEFLAGS = --no-print-directory
