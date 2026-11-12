@@ -24,7 +24,7 @@ ACLOCAL_AMFLAGS = -I m4
 
 SUBDIRS = libltdl src include
 if HAVE_MAKEINFO
-	SUBDIRS += doc
+SUBDIRS += doc
 endif
 
 MAKEFLAGS = --no-print-directory
