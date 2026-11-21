@@ -23,3 +23,4 @@
 
 
 info_TEXINFOS = guile-dbi.texi
+AM_MAKEINFOHTMLFLAGS = --no-split
