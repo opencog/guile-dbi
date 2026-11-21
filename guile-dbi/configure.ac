@@ -21,10 +21,10 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([guile-dbi],[3.2.1],[bug-guile@gnu.org])
+AC_INIT([guile-dbi],[3.3.0],[bug-guile@gnu.org])
 
 # Interfaces is format CURRENT:REVISION:AGE
-DBI_INTERFACE="5:0:1"
+DBI_INTERFACE="6:0:2"
 AC_SUBST([DBI_INTERFACE])
 
 AM_INIT_AUTOMAKE([foreign])

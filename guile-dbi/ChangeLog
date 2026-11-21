@@ -1,4 +1,4 @@
-Version 3.3.0 (2026-XXX TBD)
+Version 3.3.0 (2026-11-21)
 	* Add support for affected_rows in all backends.
 	* Get rid of old, unused ChangeLogs in all the subdirs.
 	* Fix handling of dynamically assigned OID's in pgres DBD (#30)
