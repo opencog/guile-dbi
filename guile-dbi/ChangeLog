@@ -1,3 +1,6 @@
+Version 3.3.1 (2027 XXX TBD Someday in the Future)
+	* Nothing yet.
+
 Version 3.3.0 (2026-11-21)
 	* Add support for affected_rows in all backends.
 	* Get rid of old, unused ChangeLogs in all the subdirs.
