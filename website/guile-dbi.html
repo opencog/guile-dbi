@@ -1,95 +1,90 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
+<!DOCTYPE html>
 <html>
-<!-- Created on May 4, 2026 by texi2html 1.82
-texi2html was written by: 
-            Lionel Cons <Lionel.Cons@cern.ch> (original author)
-            Karl Berry  <karl@freefriends.org>
-            Olaf Bachmann <obachman@mathematik.uni-kl.de>
-            and many others.
-Maintained by: Many creative people.
-Send bugs and suggestions to <texi2html-bug@nongnu.org>
--->
+<!-- Created by GNU Texinfo 7.1.1, https://www.gnu.org/software/texinfo/ -->
 <head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <title>Guile DBI manual</title>
 
 <meta name="description" content="Guile DBI manual">
 <meta name="keywords" content="Guile DBI manual">
 <meta name="resource-type" content="document">
 <meta name="distribution" content="global">
-<meta name="Generator" content="texi2html 1.82">
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="#Top" rel="start" title="Top">
+<link href="#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="dir.html#Top" rel="up" title="(dir)">
+<link href="#Introduction" rel="next" title="Introduction">
+<link href="dir.html#Top" rel="prev" title="(dir)">
 <style type="text/css">
 <!--
-a.summary-letter {text-decoration: none}
-blockquote.smallquotation {font-size: smaller}
-pre.display {font-family: serif}
-pre.format {font-family: serif}
-pre.menu-comment {font-family: serif}
-pre.menu-preformatted {font-family: serif}
-pre.smalldisplay {font-family: serif; font-size: smaller}
-pre.smallexample {font-size: smaller}
-pre.smallformat {font-family: serif; font-size: smaller}
-pre.smalllisp {font-size: smaller}
-span.roman {font-family:serif; font-weight:normal;}
-span.sansserif {font-family:sans-serif; font-weight:normal;}
-ul.toc {list-style: none}
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+div.example {margin-left: 3.2em}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+ul.mark-bullet {list-style-type: disc}
+ul.toc-numbered-mark {list-style: none}
 -->
 </style>
 
 
 </head>
 
-<body lang="en" bgcolor="#FFFFFF" text="#000000" link="#0000FF" vlink="#800080" alink="#FF0000">
+<body lang="en">
 
-<a name="Top"></a>
-<table cellpadding="1" cellspacing="1" border="0">
-<tr><td valign="middle" align="left">[<a href="#Top" title="Cover (top) of document">Top</a>]</td>
-<td valign="middle" align="left">[<a href="#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[Index]</td>
-<td valign="middle" align="left">[<a href="#SEC_About" title="About (help)"> ? </a>]</td>
-</tr></table>
-<a name="Guile-DBI-Manual"></a>
-<h1 class="settitle">Guile DBI Manual</h1>
+
+
+
+<div class="top-level-extent" id="Top">
+<div class="nav-panel">
+<p>
+Next: <a href="#Introduction" accesskey="n" rel="next">Introduction</a>, Previous: <a href="dir.html#Top" accesskey="p" rel="prev">(dir)</a>, Up: <a href="dir.html#Top" accesskey="u" rel="up">(dir)</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</p>
+</div>
+<h1 class="top" id="Guile-DBI-Manual"><span>Guile DBI Manual<a class="copiable-link" href="#Guile-DBI-Manual"> &para;</a></span></h1>
 
 <p>This reference manual documents Guile DBI, Guile Data Base Interface.
 It describes how to use Guile DBI and how to write new DBD database
 drivers.
 </p>
-<p>This Info file contains edition 3.2.0 of the reference
-manual, corresponding to Guile DBI version 3.2.0.
+<p>This Info file contains edition 3.3.0 of the reference
+manual, corresponding to Guile DBI version 3.3.0.
 </p>
 
-<table class="menu" border="0" cellspacing="0">
-<tr><td align="left" valign="top"><a href="#Introduction">1. Introduction</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
-</td></tr>
-<tr><td align="left" valign="top"><a href="#Tutorial">2. Tutorial</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
-</td></tr>
-<tr><td align="left" valign="top"><a href="#Reference">3. Reference</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
-</td></tr>
-<tr><td align="left" valign="top"><a href="#Internals-and-Database-Drivers">4. Internals and Database Drivers</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
-</td></tr>
-</table>
 
-<hr size="1">
-<a name="Introduction"></a>
-<table cellpadding="1" cellspacing="1" border="0">
-<tr><td valign="middle" align="left">[<a href="#Top" title="Previous section in reading order"> &lt; </a>]</td>
-<td valign="middle" align="left">[<a href="#History" title="Next section in reading order"> &gt; </a>]</td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left">[<a href="#Top" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
-<td valign="middle" align="left">[<a href="#Top" title="Up section"> Up </a>]</td>
-<td valign="middle" align="left">[<a href="#Tutorial" title="Next chapter"> &gt;&gt; </a>]</td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left">[<a href="#Top" title="Cover (top) of document">Top</a>]</td>
-<td valign="middle" align="left">[<a href="#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[Index]</td>
-<td valign="middle" align="left">[<a href="#SEC_About" title="About (help)"> ? </a>]</td>
-</tr></table>
-<a name="Introduction-1"></a>
-<h1 class="chapter">1. Introduction</h1>
+<div class="element-contents" id="SEC_Contents">
+<h2 class="contents-heading">Table of Contents</h2>
+
+<div class="contents">
+
+<ul class="toc-numbered-mark">
+  <li><a id="toc-Introduction-1" href="#Introduction">1 Introduction</a>
+  <ul class="toc-numbered-mark">
+    <li><a id="toc-History" href="#History">1.1 History</a></li>
+    <li><a id="toc-Getting-Guile-DBI" href="#Getting-Guile-DBI">1.2 Getting Guile DBI</a></li>
+  </ul></li>
+  <li><a id="toc-Tutorial-1" href="#Tutorial">2 Tutorial</a></li>
+  <li><a id="toc-Reference-1" href="#Reference">3 Reference</a>
+  <ul class="toc-numbered-mark">
+    <li><a id="toc-Functions" href="#Functions">3.1 Functions</a></li>
+  </ul></li>
+  <li><a id="toc-Internals-and-Database-Drivers-1" href="#Internals-and-Database-Drivers">4 Internals and Database Drivers</a>
+  <ul class="toc-numbered-mark">
+    <li><a id="toc-Internal-structures-1" href="#Internal-structures">4.1 Internal structures</a></li>
+    <li><a id="toc-Internal-functions-1" href="#Internal-functions">4.2 Internal functions</a></li>
+    <li><a id="toc-How-plugins-are-loaded-1" href="#How-plugins-are-loaded">4.3 How plugins are loaded</a></li>
+    <li><a id="toc-How-to-write-plugins-1" href="#How-to-write-plugins">4.4 How to write plugins</a></li>
+  </ul></li>
+</ul>
+</div>
+</div>
+<hr>
+<div class="chapter-level-extent" id="Introduction">
+<div class="nav-panel">
+<p>
+Next: <a href="#Tutorial" accesskey="n" rel="next">Tutorial</a>, Previous: <a href="#Top" accesskey="p" rel="prev">Guile DBI Manual</a>, Up: <a href="#Top" accesskey="u" rel="up">Guile DBI Manual</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</p>
+</div>
+<h2 class="chapter" id="Introduction-1"><span>1 Introduction<a class="copiable-link" href="#Introduction-1"> &para;</a></span></h2>
 
 <p>guile-dbi provides a simple, generic, easy-to-use scheme/guile interface
 to SQL databases, such as Postgres, MySQL or SQLite.
@@ -99,25 +94,12 @@ part, which provides the scheme interfaces, and the DBD (database
 dependent) plugins, which connect to the actual SQL server. Currently,
 there are DBD backends for Postgres, MySQL and SQLite3.
 </p>
-<hr size="6">
-<a name="History"></a>
-<table cellpadding="1" cellspacing="1" border="0">
-<tr><td valign="middle" align="left">[<a href="#Introduction" title="Previous section in reading order"> &lt; </a>]</td>
-<td valign="middle" align="left">[<a href="#Getting-Guile-DBI" title="Next section in reading order"> &gt; </a>]</td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left">[<a href="#Introduction" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
-<td valign="middle" align="left">[<a href="#Introduction" title="Up section"> Up </a>]</td>
-<td valign="middle" align="left">[<a href="#Tutorial" title="Next chapter"> &gt;&gt; </a>]</td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left">[<a href="#Top" title="Cover (top) of document">Top</a>]</td>
-<td valign="middle" align="left">[<a href="#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[Index]</td>
-<td valign="middle" align="left">[<a href="#SEC_About" title="About (help)"> ? </a>]</td>
-</tr></table>
-<h2 class="section">1.1 History</h2>
+<ul class="mini-toc">
+<li><a href="#History" accesskey="1">History</a></li>
+<li><a href="#Getting-Guile-DBI" accesskey="2">Getting Guile DBI</a></li>
+</ul>
+<div class="section-level-extent" id="History">
+<h3 class="section"><span>1.1 History<a class="copiable-link" href="#History"> &para;</a></span></h3>
 
 <p>In 2004, Maurizio Boriani wrote:
 &lt;&lt;I was looking around for a generic database library for guile scheme
@@ -133,64 +115,38 @@ this was the only one that was documented, and held any promise of
 working. After a few bug fixes, it worked to my satisfaction, and
 I now use it in one of my projects (the OpenCog NLP subsystem).&gt;&gt;
 </p>
-<hr size="6">
-<a name="Getting-Guile-DBI"></a>
-<table cellpadding="1" cellspacing="1" border="0">
-<tr><td valign="middle" align="left">[<a href="#History" title="Previous section in reading order"> &lt; </a>]</td>
-<td valign="middle" align="left">[<a href="#Tutorial" title="Next section in reading order"> &gt; </a>]</td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left">[<a href="#Introduction" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
-<td valign="middle" align="left">[<a href="#Introduction" title="Up section"> Up </a>]</td>
-<td valign="middle" align="left">[<a href="#Tutorial" title="Next chapter"> &gt;&gt; </a>]</td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left">[<a href="#Top" title="Cover (top) of document">Top</a>]</td>
-<td valign="middle" align="left">[<a href="#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[Index]</td>
-<td valign="middle" align="left">[<a href="#SEC_About" title="About (help)"> ? </a>]</td>
-</tr></table>
-<h2 class="section">1.2 Getting Guile DBI</h2>
+</div>
+<div class="section-level-extent" id="Getting-Guile-DBI">
+<h3 class="section"><span>1.2 Getting Guile DBI<a class="copiable-link" href="#Getting-Guile-DBI"> &para;</a></span></h3>
 
 <p>You can find the latest version of Guile DBI at its project page,
-<a href="http://github.com/opencog/guile-dbi/">http://github.com/opencog/guile-dbi/</a>.
+<a class="url" href="http://github.com/opencog/guile-dbi/">http://github.com/opencog/guile-dbi/</a>.
 </p>
 <br>
 <p>In the file download area, there are dbi and driver tarballs.
 </p>
-<hr size="6">
-<a name="Tutorial"></a>
-<table cellpadding="1" cellspacing="1" border="0">
-<tr><td valign="middle" align="left">[<a href="#Getting-Guile-DBI" title="Previous section in reading order"> &lt; </a>]</td>
-<td valign="middle" align="left">[<a href="#Reference" title="Next section in reading order"> &gt; </a>]</td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left">[<a href="#Introduction" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
-<td valign="middle" align="left">[<a href="#Top" title="Up section"> Up </a>]</td>
-<td valign="middle" align="left">[<a href="#Reference" title="Next chapter"> &gt;&gt; </a>]</td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left">[<a href="#Top" title="Cover (top) of document">Top</a>]</td>
-<td valign="middle" align="left">[<a href="#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[Index]</td>
-<td valign="middle" align="left">[<a href="#SEC_About" title="About (help)"> ? </a>]</td>
-</tr></table>
-<a name="Tutorial-1"></a>
-<h1 class="chapter">2. Tutorial</h1>
+<hr>
+</div>
+</div>
+<div class="chapter-level-extent" id="Tutorial">
+<div class="nav-panel">
+<p>
+Next: <a href="#Reference" accesskey="n" rel="next">Reference</a>, Previous: <a href="#Introduction" accesskey="p" rel="prev">Introduction</a>, Up: <a href="#Top" accesskey="u" rel="up">Guile DBI Manual</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</p>
+</div>
+<h2 class="chapter" id="Tutorial-1"><span>2 Tutorial<a class="copiable-link" href="#Tutorial-1"> &para;</a></span></h2>
 
 <p>The Scheme interface is very simple.
-There are only 6 functions: <code>dbi-open</code>,
-<code>dbi-close</code>, <code>dbi-query</code>, <code>dbi-params-query</code>,
-<code>dbi-get_status</code> and <code>dbi-get_row</code>.
+There are only 7 functions: <code class="code">dbi-open</code>,
+<code class="code">dbi-close</code>, <code class="code">dbi-query</code>, <code class="code">dbi-params-query</code>,
+<code class="code">dbi-get_status</code>, <code class="code">dbi-get_row</code> and <code class="code">dbi-affected-rows</code>.
 </p>
 <br>
 <p>Guile DBI supports any database for which a DBD backend is written.
 Currently, these are MySQL, Postgres and SQLite.
 </p>
 <p>Here&rsquo;s an example usage, using SQLite3:
-</p><table><tr><td>&nbsp;</td><td><pre class="example">(use-modules (dbi dbi))
+</p><div class="example">
+<pre class="example-preformatted">(use-modules (dbi dbi))
 
 ;; Log into the database.
 (define db-obj (dbi-open &quot;sqlite3&quot; &quot;my-example-db&quot;))
@@ -219,14 +175,15 @@ Currently, these are MySQL, Postgres and SQLite.
 (dbi-close db-obj)
 (display db-obj) (newline)
 
-</pre></td></tr></table>
+</pre></div>
 
-<p>The same example rewritten to use <code>dbi-params-query</code> with
+<p>The same example rewritten to use <code class="code">dbi-params-query</code> with
 parameterized queries.  Parameter placeholders use the driver-native
-syntax: <code>?</code> for SQLite3 and MySQL, <code>$1 $2 &hellip;</code> for
+syntax: <code class="code">?</code> for SQLite3 and MySQL, <code class="code">$1 $2 &hellip;</code> for
 PostgreSQL.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(use-modules (dbi dbi))
+<div class="example">
+<pre class="example-preformatted">(use-modules (dbi dbi))
 
 (define db-obj (dbi-open &quot;sqlite3&quot; &quot;my-example-db&quot;))
 
@@ -251,13 +208,14 @@ PostgreSQL.
     (loop (dbi-get_row db-obj))))
 
 (dbi-close db-obj)
-</pre></td></tr></table>
+</pre></div>
 
 <p>Here&rsquo;s another example, using the MySQL database. This example assumes
 that the MySQL server is running, and that a table named &quot;pippo&quot; has
 already been created and populated with data:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">#!/usr/bin/guile -e main -s
+<div class="example">
+<pre class="example-preformatted">#!/usr/bin/guile -e main -s
 !#
 
 (use-modules (dbi dbi))
@@ -280,67 +238,42 @@ already been created and populated with data:
     (display ret)(newline)
 
 ))
-</pre></td></tr></table>
+</pre></div>
 
 <p>Login credentials for PostgreSQL work similarly:
-</p><table><tr><td>&nbsp;</td><td><pre class="example">#!/usr/bin/guile -e main -s
+</p><div class="example">
+<pre class="example-preformatted">#!/usr/bin/guile -e main -s
 !#
 
 (use-modules (dbi dbi))
 
 (define conxion (dbi-open &quot;postgresql&quot; &quot;user:pass:pluto:tcp:localhost:5432&quot;))
 (define conxion (dbi-open &quot;postgresql&quot; &quot;user:pass:pluto:socket:/var/run/postgresql&quot;))
-</pre></td></tr></table>
+</pre></div>
 
 
-<hr size="6">
-<a name="Reference"></a>
-<table cellpadding="1" cellspacing="1" border="0">
-<tr><td valign="middle" align="left">[<a href="#Tutorial" title="Previous section in reading order"> &lt; </a>]</td>
-<td valign="middle" align="left">[<a href="#Functions" title="Next section in reading order"> &gt; </a>]</td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left">[<a href="#Tutorial" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
-<td valign="middle" align="left">[<a href="#Top" title="Up section"> Up </a>]</td>
-<td valign="middle" align="left">[<a href="#Internals-and-Database-Drivers" title="Next chapter"> &gt;&gt; </a>]</td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left">[<a href="#Top" title="Cover (top) of document">Top</a>]</td>
-<td valign="middle" align="left">[<a href="#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[Index]</td>
-<td valign="middle" align="left">[<a href="#SEC_About" title="About (help)"> ? </a>]</td>
-</tr></table>
-<a name="Reference-1"></a>
-<h1 class="chapter">3. Reference</h1>
+<hr>
+</div>
+<div class="chapter-level-extent" id="Reference">
+<div class="nav-panel">
+<p>
+Next: <a href="#Internals-and-Database-Drivers" accesskey="n" rel="next">Internals and Database Drivers</a>, Previous: <a href="#Tutorial" accesskey="p" rel="prev">Tutorial</a>, Up: <a href="#Top" accesskey="u" rel="up">Guile DBI Manual</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</p>
+</div>
+<h2 class="chapter" id="Reference-1"><span>3 Reference<a class="copiable-link" href="#Reference-1"> &para;</a></span></h2>
 
-<hr size="6">
-<a name="Functions"></a>
-<table cellpadding="1" cellspacing="1" border="0">
-<tr><td valign="middle" align="left">[<a href="#Reference" title="Previous section in reading order"> &lt; </a>]</td>
-<td valign="middle" align="left">[<a href="#Internals-and-Database-Drivers" title="Next section in reading order"> &gt; </a>]</td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left">[<a href="#Reference" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
-<td valign="middle" align="left">[<a href="#Reference" title="Up section"> Up </a>]</td>
-<td valign="middle" align="left">[<a href="#Internals-and-Database-Drivers" title="Next chapter"> &gt;&gt; </a>]</td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left">[<a href="#Top" title="Cover (top) of document">Top</a>]</td>
-<td valign="middle" align="left">[<a href="#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[Index]</td>
-<td valign="middle" align="left">[<a href="#SEC_About" title="About (help)"> ? </a>]</td>
-</tr></table>
-<h2 class="section">3.1 Functions</h2>
+<ul class="mini-toc">
+<li><a href="#Functions" accesskey="1">Functions</a></li>
+</ul>
+<div class="section-level-extent" id="Functions">
+<h3 class="section"><span>3.1 Functions<a class="copiable-link" href="#Functions"> &para;</a></span></h3>
 
-<dl>
-<dt><a name="index-dbi_002dopen"></a><u>Primitive:</u> <b>dbi-open</b><i> backend connString</i></dt>
+<dl class="first-deffn">
+<dt class="deffn" id="index-dbi_002dopen"><span class="category-def">Primitive: </span><span><strong class="def-name">dbi-open</strong> <var class="def-var-arguments">backend connString</var><a class="copiable-link" href="#index-dbi_002dopen"> &para;</a></span></dt>
 <dd>
-<p>Attempt to load driver <var>backend</var>, and connect to database passing
-<var>connString</var> (which is connection string) to driver connect function.
+<p>Attempt to load driver <var class="var">backend</var>, and connect to database passing
+<var class="var">connString</var> (which is connection string) to driver connect function.
 </p>
-<p>If successful, it returns a <code>db-handle</code> object which is to be
+<p>If successful, it returns a <code class="code">db-handle</code> object which is to be
 used to reference the newly opened database connection. This object also
 contains result status.
 </p>
@@ -349,63 +282,67 @@ should be explained in its README file.
 </p>
 <p>For example, to connect to Postgres, using TCP sockets, to the
 localhost, at the standard, default Postgres port 5432:
-</p><table><tr><td>&nbsp;</td><td><pre class="example">(dbi-open &quot;postgresql&quot; &quot;user:pass:database:tcp:localhost:5432&quot;)
-</pre></td></tr></table>
+</p><div class="example">
+<pre class="example-preformatted">(dbi-open &quot;postgresql&quot; &quot;user:pass:database:tcp:localhost:5432&quot;)
+</pre></div>
 
 </dd></dl>
 
 
-<dl>
-<dt><a name="index-dbi_002dquery"></a><u>Primitive:</u> <b>dbi-query</b><i> db-handle query</i></dt>
+<dl class="first-deffn">
+<dt class="deffn" id="index-dbi_002dquery"><span class="category-def">Primitive: </span><span><strong class="def-name">dbi-query</strong> <var class="def-var-arguments">db-handle query</var><a class="copiable-link" href="#index-dbi_002dquery"> &para;</a></span></dt>
 <dd>
-<p>Execute a query using <var>db-handle</var> and store status.
+<p>Execute a query using <var class="var">db-handle</var> and store status.
 </p>
 <p>Example:
-</p><table><tr><td>&nbsp;</td><td><pre class="example">(dbi-query db &quot;select * from table&quot;)
-</pre></td></tr></table>
+</p><div class="example">
+<pre class="example-preformatted">(dbi-query db &quot;select * from table&quot;)
+</pre></div>
 </dd></dl>
 
 
-<dl>
-<dt><a name="index-dbi_002dparams_002dquery"></a><u>Primitive:</u> <b>dbi-params-query</b><i> db-handle query params</i></dt>
+<dl class="first-deffn">
+<dt class="deffn" id="index-dbi_002dparams_002dquery"><span class="category-def">Primitive: </span><span><strong class="def-name">dbi-params-query</strong> <var class="def-var-arguments">db-handle query params</var><a class="copiable-link" href="#index-dbi_002dparams_002dquery"> &para;</a></span></dt>
 <dd>
-<p>Prepare <var>query</var> as a parameterized SQL statement, bind each element
-of <var>params</var> (a list) to its corresponding placeholder, then execute
+<p>Prepare <var class="var">query</var> as a parameterized SQL statement, bind each element
+of <var class="var">params</var> (a list) to its corresponding placeholder, then execute
 the statement.  This is the recommended way to pass user-supplied
 values to the database because the driver handles all quoting and
 escaping, eliminating SQL-injection risk.
 </p>
-<p><var>params</var> must be a Scheme list even when there is only one
-parameter.  Pass <code>'()</code> when the query has no placeholders.
+<p><var class="var">params</var> must be a Scheme list even when there is only one
+parameter.  Pass <code class="code">'()</code> when the query has no placeholders.
 </p>
-<p><var>query</var> must use the placeholder syntax of the target database:
-</p><ul>
-<li> <strong>SQLite3</strong>: <code>?</code> (positional)
-</li><li> <strong>MySQL</strong>: <code>?</code> (positional)
-</li><li> <strong>PostgreSQL</strong>: <code>$1</code>, <code>$2</code>, &hellip; (numbered)
+<p><var class="var">query</var> must use the placeholder syntax of the target database:
+</p><ul class="itemize mark-bullet">
+<li><strong class="strong">SQLite3</strong>: <code class="code">?</code> (positional)
+</li><li><strong class="strong">MySQL</strong>: <code class="code">?</code> (positional)
+</li><li><strong class="strong">PostgreSQL</strong>: <code class="code">$1</code>, <code class="code">$2</code>, &hellip; (numbered)
 </li></ul>
 
-<p>Each element of <var>params</var> is a Scheme value.  Supported types
+<p>Each element of <var class="var">params</var> is a Scheme value.  Supported types
 and their SQL mapping:
-</p><table>
+</p><table class="multitable">
 <thead><tr><th width="30%">Scheme type</th><th width="70%">SQL binding</th></tr></thead>
-<tr><td width="30%">boolean (<code>#t</code>/<code>#f</code>)</td><td width="70%">integer 1 / 0 (SQLite3, MySQL) or boolean (PostgreSQL)</td></tr>
+<tbody><tr><td width="30%">boolean (<code class="code">#t</code>/<code class="code">#f</code>)</td><td width="70%">integer 1 / 0 (SQLite3, MySQL) or boolean (PostgreSQL)</td></tr>
 <tr><td width="30%">exact integer</td><td width="70%">INTEGER / BIGINT</td></tr>
 <tr><td width="30%">inexact real</td><td width="70%">FLOAT / DOUBLE (MySQL, SQLite3) or text representation (PostgreSQL)</td></tr>
 <tr><td width="30%">string</td><td width="70%">TEXT / VARCHAR</td></tr>
-<tr><td width="30%"><code>'()</code> (null list)</td><td width="70%">SQL NULL</td></tr>
+<tr><td width="30%"><code class="code">'()</code> (null list)</td><td width="70%">SQL NULL</td></tr>
+</tbody>
 </table>
 
-<p>Use <code>dbi-get_status</code> immediately after to check whether the
+<p>Use <code class="code">dbi-get_status</code> immediately after to check whether the
 call succeeded before attempting to fetch rows.
 </p>
 <p>Note: although the underlying driver receives parameters as a C
-<code>argc</code>/<code>argv</code> array, the Scheme-level API takes a single
+<code class="code">argc</code>/<code class="code">argv</code> array, the Scheme-level API takes a single
 list argument.  The guile-dbi core converts the list before calling
 the driver.
 </p>
-<p>Example with SQLite3 / MySQL (<code>?</code> placeholders):
-</p><table><tr><td>&nbsp;</td><td><pre class="example">(dbi-params-query db
+<p>Example with SQLite3 / MySQL (<code class="code">?</code> placeholders):
+</p><div class="example">
+<pre class="example-preformatted">(dbi-params-query db
   &quot;insert into users (name, age) values (?, ?)&quot; '(&quot;alice&quot; 30))
 
 (dbi-params-query db
@@ -413,42 +350,76 @@ the driver.
 (let loop ((row (dbi-get_row db)))
   (when row (display row) (newline)
             (loop (dbi-get_row db))))
-</pre></td></tr></table>
+</pre></div>
 
-<p>Example with PostgreSQL (<code>$N</code> placeholders):
-</p><table><tr><td>&nbsp;</td><td><pre class="example">(dbi-params-query db
+<p>Example with PostgreSQL (<code class="code">$N</code> placeholders):
+</p><div class="example">
+<pre class="example-preformatted">(dbi-params-query db
   &quot;select * from users where age &gt; $1 and active = $2&quot; '(18 #t))
-</pre></td></tr></table>
+</pre></div>
 
 </dd></dl>
 
 
-<dl>
-<dt><a name="index-dbi_002dget_005fstatus"></a><u>Primitive:</u> <b>dbi-get_status</b><i> db-handle</i></dt>
+<dl class="first-deffn">
+<dt class="deffn" id="index-dbi_002dget_005fstatus"><span class="category-def">Primitive: </span><span><strong class="def-name">dbi-get_status</strong> <var class="def-var-arguments">db-handle</var><a class="copiable-link" href="#index-dbi_002dget_005fstatus"> &para;</a></span></dt>
 <dd>
 <p>Return a pair whose car is the status numeric code and cdr is a
-status string message. <var>db-handle</var> should be a valid database
+status string message. <var class="var">db-handle</var> should be a valid database
 handle object.
 </p>
 </dd></dl>
 
 
-<dl>
-<dt><a name="index-dbi_002dget_005frow"></a><u>Primitive:</u> <b>dbi-get_row</b><i> db-handle</i></dt>
+<dl class="first-deffn">
+<dt class="deffn" id="index-dbi_002daffected_002drows"><span class="category-def">Primitive: </span><span><strong class="def-name">dbi-affected-rows</strong> <var class="def-var-arguments">db-handle</var><a class="copiable-link" href="#index-dbi_002daffected_002drows"> &para;</a></span></dt>
 <dd>
-<p>Called after <code>dbi-query</code> or <code>dbi-params-query</code>, returns the
-next row of the result set, or <code>#f</code> when no more rows are available.
+<p>Return the number of rows affected by the most recently executed
+<code class="code">dbi-query</code> or <code class="code">dbi-params-query</code> on <var class="var">db-handle</var>.
 </p>
-<p>A row is returned as an association list: a list of <code>(field-name
+<p>The value is meaningful only after a data-manipulation statement (INSERT,
+UPDATE, DELETE).  For SELECT statements the value is driver-dependent:
+</p>
+<ul class="itemize mark-bullet">
+<li><strong class="strong">SQLite3</strong>: always 0 (sqlite3_changes() returns 0 for queries
+that produce a result set).
+</li><li><strong class="strong">PostgreSQL</strong>: always 0 (PQcmdTuples() returns an empty string
+for SELECT; atoll(&quot;&quot;) == 0).
+</li><li><strong class="strong">MySQL / MariaDB</strong>: &minus;1 (mysql_affected_rows() returns the
+special sentinel value (my_ulonglong)&minus;1 for statements that return a
+result set, per the MariaDB documentation).
+</li></ul>
+
+<p>The return value is an exact integer.  The value is reset to 0 by
+<code class="code">dbi-open</code> and updated by every subsequent query call.
+</p>
+<p>Example:
+</p><div class="example">
+<pre class="example-preformatted">(dbi-query db &quot;insert into t values (1), (2), (3)&quot;)
+(display (dbi-affected-rows db))   &rArr; 3
+
+(dbi-params-query db &quot;delete from t where id = ?&quot; '(1))
+(display (dbi-affected-rows db))   &rArr; 1
+</pre></div>
+</dd></dl>
+
+
+<dl class="first-deffn">
+<dt class="deffn" id="index-dbi_002dget_005frow"><span class="category-def">Primitive: </span><span><strong class="def-name">dbi-get_row</strong> <var class="def-var-arguments">db-handle</var><a class="copiable-link" href="#index-dbi_002dget_005frow"> &para;</a></span></dt>
+<dd>
+<p>Called after <code class="code">dbi-query</code> or <code class="code">dbi-params-query</code>, returns the
+next row of the result set, or <code class="code">#f</code> when no more rows are available.
+</p>
+<p>A row is returned as an association list: a list of <code class="code">(field-name
 . value)</code> pairs, one per column.  Field names are strings.  Column
 values use the closest Scheme type according to the following
 conventions:
 </p>
-<table>
+<table class="multitable">
 <thead><tr><th width="35%">SQL type</th><th width="30%">Scheme value</th><th width="35%">Notes</th></tr></thead>
-<tr><td width="35%">INTEGER / SMALLINT / BIGINT</td><td width="30%">exact integer</td><td width="35%"></td></tr>
+<tbody><tr><td width="35%">INTEGER / SMALLINT / BIGINT</td><td width="30%">exact integer</td><td width="35%"></td></tr>
 <tr><td width="35%">REAL / FLOAT / DOUBLE</td><td width="30%">inexact real</td><td width="35%"></td></tr>
-<tr><td width="35%">BOOLEAN</td><td width="30%"><code>#t</code> / <code>#f</code></td><td width="35%">PostgreSQL only; SQLite3 stores as integer</td></tr>
+<tr><td width="35%">BOOLEAN</td><td width="30%"><code class="code">#t</code> / <code class="code">#f</code></td><td width="35%">PostgreSQL only; SQLite3 stores as integer</td></tr>
 <tr><td width="35%">TEXT / VARCHAR / CHAR</td><td width="30%">string</td><td width="35%"></td></tr>
 <tr><td width="35%">NUMERIC / DECIMAL</td><td width="30%">string</td><td width="35%">Preserves exact representation</td></tr>
 <tr><td width="35%">MONEY</td><td width="30%">string</td><td width="35%">Avoids locale-dependent formatting</td></tr>
@@ -456,21 +427,23 @@ conventions:
 <tr><td width="35%">DATE / TIME / TIMESTAMP</td><td width="30%">string</td><td width="35%">ISO 8601 format</td></tr>
 <tr><td width="35%">UUID / JSON / JSONB</td><td width="30%">string</td><td width="35%"></td></tr>
 <tr><td width="35%">INTEGER[] / BIGINT[]</td><td width="30%">list of exact integers</td><td width="35%">PostgreSQL array types</td></tr>
-<tr><td width="35%">SQL NULL</td><td width="30%"><code>(if #f #f)</code> (unspecified)</td><td width="35%">Distinct from <code>#f</code></td></tr>
+<tr><td width="35%">SQL NULL</td><td width="30%"><code class="code">(if #f #f)</code> (unspecified)</td><td width="35%">Distinct from <code class="code">#f</code></td></tr>
+</tbody>
 </table>
 
-<p><strong>NULL handling</strong>: a SQL NULL column is returned as the Scheme
-unspecified value <code>(if #f #f)</code>, <em>not</em> as <code>#f</code>.  This
+<p><strong class="strong">NULL handling</strong>: a SQL NULL column is returned as the Scheme
+unspecified value <code class="code">(if #f #f)</code>, <em class="emph">not</em> as <code class="code">#f</code>.  This
 preserves the distinction between a NULL value and a boolean false or
-a missing row.  Test for it with <code>(eq? val (if #f #f))</code>.
+a missing row.  Test for it with <code class="code">(eq? val (if #f #f))</code>.
 </p>
-<p>When there are no more rows, <code>dbi-get_row</code> returns <code>#f</code> and
-sets the status to a success code (e.g. &lsquo;<samp>row end</samp>&rsquo;).  Always
-check <code>dbi-get_status</code> if you need to distinguish an empty result
+<p>When there are no more rows, <code class="code">dbi-get_row</code> returns <code class="code">#f</code> and
+sets the status to a success code (e.g. &lsquo;<samp class="samp">row end</samp>&rsquo;).  Always
+check <code class="code">dbi-get_status</code> if you need to distinguish an empty result
 from an error.
 </p>
 <p>Example:
-</p><table><tr><td>&nbsp;</td><td><pre class="example">(dbi-query db &quot;select id, name, score from results&quot;)
+</p><div class="example">
+<pre class="example-preformatted">(dbi-query db &quot;select id, name, score from results&quot;)
 (let loop ((row (dbi-get_row db)))
   (when row
     (let ((id    (assoc-ref row &quot;id&quot;))
@@ -481,78 +454,52 @@ from an error.
           (format #t &quot;~a ~a: no score~%&quot; id name)
           (format #t &quot;~a ~a: ~a~%&quot; id name score)))
     (loop (dbi-get_row db))))
-</pre></td></tr></table>
+</pre></div>
 </dd></dl>
 
 
-<dl>
-<dt><a name="index-dbi_002dclose"></a><u>Primitive:</u> <b>dbi-close</b><i> db-handle</i></dt>
+<dl class="first-deffn">
+<dt class="deffn" id="index-dbi_002dclose"><span class="category-def">Primitive: </span><span><strong class="def-name">dbi-close</strong> <var class="def-var-arguments">db-handle</var><a class="copiable-link" href="#index-dbi_002dclose"> &para;</a></span></dt>
 <dd>
-<p>This function closes <var>db-handle</var> and dereferences the loaded database
+<p>This function closes <var class="var">db-handle</var> and dereferences the loaded database
 driver. When driver&rsquo;s reference count is 0, it is freed.
 </p>
 <p>Example:
-</p><table><tr><td>&nbsp;</td><td><pre class="example">(dbi-close db-handle)
-</pre></td></tr></table>
+</p><div class="example">
+<pre class="example-preformatted">(dbi-close db-handle)
+</pre></div>
 </dd></dl>
 
 
-<hr size="6">
-<a name="Internals-and-Database-Drivers"></a>
-<table cellpadding="1" cellspacing="1" border="0">
-<tr><td valign="middle" align="left">[<a href="#Functions" title="Previous section in reading order"> &lt; </a>]</td>
-<td valign="middle" align="left">[<a href="#Internal-structures" title="Next section in reading order"> &gt; </a>]</td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left">[<a href="#Reference" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
-<td valign="middle" align="left">[<a href="#Top" title="Up section"> Up </a>]</td>
-<td valign="middle" align="left">[ &gt;&gt; ]</td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left">[<a href="#Top" title="Cover (top) of document">Top</a>]</td>
-<td valign="middle" align="left">[<a href="#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[Index]</td>
-<td valign="middle" align="left">[<a href="#SEC_About" title="About (help)"> ? </a>]</td>
-</tr></table>
-<a name="Internals-and-Database-Drivers-1"></a>
-<h1 class="chapter">4. Internals and Database Drivers</h1>
+<hr>
+</div>
+</div>
+<div class="chapter-level-extent" id="Internals-and-Database-Drivers">
+<div class="nav-panel">
+<p>
+Previous: <a href="#Reference" accesskey="p" rel="prev">Reference</a>, Up: <a href="#Top" accesskey="u" rel="up">Guile DBI Manual</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</p>
+</div>
+<h2 class="chapter" id="Internals-and-Database-Drivers-1"><span>4 Internals and Database Drivers<a class="copiable-link" href="#Internals-and-Database-Drivers-1"> &para;</a></span></h2>
 
-<table class="menu" border="0" cellspacing="0">
-<tr><td align="left" valign="top"><a href="#Internal-structures">4.1 Internal structures</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
-</td></tr>
-<tr><td align="left" valign="top"><a href="#Internal-functions">4.2 Internal functions</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
-</td></tr>
-<tr><td align="left" valign="top"><a href="#How-plugins-are-loaded">4.3 How plugins are loaded</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
-</td></tr>
-<tr><td align="left" valign="top"><a href="#How-to-write-plugins">4.4 How to write plugins</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
-</td></tr>
-</table>
 
-<hr size="6">
-<a name="Internal-structures"></a>
-<table cellpadding="1" cellspacing="1" border="0">
-<tr><td valign="middle" align="left">[<a href="#Internals-and-Database-Drivers" title="Previous section in reading order"> &lt; </a>]</td>
-<td valign="middle" align="left">[<a href="#Internal-functions" title="Next section in reading order"> &gt; </a>]</td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left">[<a href="#Internals-and-Database-Drivers" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
-<td valign="middle" align="left">[<a href="#Internals-and-Database-Drivers" title="Up section"> Up </a>]</td>
-<td valign="middle" align="left">[ &gt;&gt; ]</td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left">[<a href="#Top" title="Cover (top) of document">Top</a>]</td>
-<td valign="middle" align="left">[<a href="#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[Index]</td>
-<td valign="middle" align="left">[<a href="#SEC_About" title="About (help)"> ? </a>]</td>
-</tr></table>
-<a name="Internal-structures-1"></a>
-<h2 class="section">4.1 Internal structures</h2>
+<ul class="mini-toc">
+<li><a href="#Internal-structures" accesskey="1">Internal structures</a></li>
+<li><a href="#Internal-functions" accesskey="2">Internal functions</a></li>
+<li><a href="#How-plugins-are-loaded" accesskey="3">How plugins are loaded</a></li>
+<li><a href="#How-to-write-plugins" accesskey="4">How to write plugins</a></li>
+</ul>
+<hr>
+<div class="section-level-extent" id="Internal-structures">
+<div class="nav-panel">
+<p>
+Next: <a href="#Internal-functions" accesskey="n" rel="next">Internal functions</a>, Previous: <a href="#Internals-and-Database-Drivers" accesskey="p" rel="prev">Internals and Database Drivers</a>, Up: <a href="#Internals-and-Database-Drivers" accesskey="u" rel="up">Internals and Database Drivers</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</p>
+</div>
+<h3 class="section" id="Internal-structures-1"><span>4.1 Internal structures<a class="copiable-link" href="#Internal-structures-1"> &para;</a></span></h3>
 
 <p>The main data structure used to store lib needed data is:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">typedef struct g_db_handle
+<div class="example">
+<pre class="example-preformatted">typedef struct g_db_handle
 {
   SCM bcknd;
   SCM constr;
@@ -561,51 +508,43 @@ driver. When driver&rsquo;s reference count is 0, it is freed.
   lt_dlhandle handle;
   void* db_info;
   int in_free; /* boolean, used to avoid alloc during garbage collection */
+  long long affected_rows; /* rows affected by the last DML query */
 } gdbi_db_handle_t;
-</pre></td></tr></table>
+</pre></div>
 
-<ul>
-<li> <code>bcknd</code> stores backend name (e.g. mysql, postgresql, sqlite, ...).
-</li><li> <code>constr</code> string, stores the backend connection string. This
+<ul class="itemize mark-bullet">
+<li><code class="code">bcknd</code> stores backend name (e.g. mysql, postgresql, sqlite, ...).
+</li><li><code class="code">constr</code> string, stores the backend connection string. This
 is not touched by guile-dbi, but is passed &ldquo;as is&rdquo; to the database plugin.
-</li><li> <code>status</code> this is a pair which is used to return information from
+</li><li><code class="code">status</code> this is a pair which is used to return information from
 backend to the dbi interface library. Its car is returns a status code number,
 cdr is a status return message.
-</li><li> <code>closed</code> boolean, <code>#t</code> if the connection is closed, and
-<code>#f</code> otherwise.
-</li><li> <code>handle</code> is a lt_dlhandle used to point to dynamically
-loaded back-end library, filled by dbi-open <code>__gdbi_dbd_wrap</code>.
+</li><li><code class="code">closed</code> boolean, <code class="code">#t</code> if the connection is closed, and
+<code class="code">#f</code> otherwise.
+</li><li><code class="code">handle</code> is a lt_dlhandle used to point to dynamically
+loaded back-end library, filled by dbi-open <code class="code">__gdbi_dbd_wrap</code>.
 Set to &ldquo;NULL&rdquo; at connection close.
-</li><li> <code>db_info</code> is a void pointer used by the backends as a data
+</li><li><code class="code">db_info</code> is a void pointer used by the backends as a data
 hook.  Set to &ldquo;NULL&rdquo; at connection close.
-</li><li> <code>in_free</code> Boolean flag, used to avoid alloc during garbage
+</li><li><code class="code">in_free</code> Boolean flag, used to avoid alloc during garbage
 collection.
+</li><li><code class="code">affected_rows</code> Number of rows affected by the last INSERT,
+UPDATE or DELETE.  Set to 0 by <code class="code">dbi-open</code> and written by the DBD
+plugin after each query.  Read by <code class="code">dbi-affected-rows</code>.
 </li></ul>
 
 
-<hr size="6">
-<a name="Internal-functions"></a>
-<table cellpadding="1" cellspacing="1" border="0">
-<tr><td valign="middle" align="left">[<a href="#Internal-structures" title="Previous section in reading order"> &lt; </a>]</td>
-<td valign="middle" align="left">[<a href="#How-plugins-are-loaded" title="Next section in reading order"> &gt; </a>]</td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left">[<a href="#Internals-and-Database-Drivers" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
-<td valign="middle" align="left">[<a href="#Internals-and-Database-Drivers" title="Up section"> Up </a>]</td>
-<td valign="middle" align="left">[ &gt;&gt; ]</td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left">[<a href="#Top" title="Cover (top) of document">Top</a>]</td>
-<td valign="middle" align="left">[<a href="#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[Index]</td>
-<td valign="middle" align="left">[<a href="#SEC_About" title="About (help)"> ? </a>]</td>
-</tr></table>
-<a name="Internal-functions-1"></a>
-<h2 class="section">4.2 Internal functions</h2>
+<hr>
+</div>
+<div class="section-level-extent" id="Internal-functions">
+<div class="nav-panel">
+<p>
+Next: <a href="#How-plugins-are-loaded" accesskey="n" rel="next">How plugins are loaded</a>, Previous: <a href="#Internal-structures" accesskey="p" rel="prev">Internal structures</a>, Up: <a href="#Internals-and-Database-Drivers" accesskey="u" rel="up">Internals and Database Drivers</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</p>
+</div>
+<h3 class="section" id="Internal-functions-1"><span>4.2 Internal functions<a class="copiable-link" href="#Internal-functions-1"> &para;</a></span></h3>
 
-<dl>
-<dt><a name="index-void"></a><u>Function:</u> <b>void</b><i> __gdbi_dbd_wrap (gdbi_db_handle_t* dbh, char* function_name, void** function_pointer)</i></dt>
+<dl class="first-deffn first-defun-alias-first-deffn">
+<dt class="deffn defun-alias-deffn" id="index-void"><span class="category-def">Function: </span><span><strong class="def-name">void</strong> <var class="def-var-arguments">__gdbi_dbd_wrap (gdbi_db_handle_t* dbh, char* function_name, void** function_pointer)</var><a class="copiable-link" href="#index-void"> &para;</a></span></dt>
 </dl>
 
 <p>This function is used to search for, and return, in the function
@@ -616,43 +555,31 @@ loaded library) to search for a function named
 query...) the function_name is filled by C &ldquo;__FUNCTION__&rdquo; macro.
 Status code and message are returned by status field in dbh.
 </p>
-<dl>
-<dt><a name="index-void-1"></a><u>Function:</u> <b>void</b><i> init_db_handle_type(void)</i></dt>
+<dl class="first-deffn first-defun-alias-first-deffn">
+<dt class="deffn defun-alias-deffn" id="index-void-1"><span class="category-def">Function: </span><span><strong class="def-name">void</strong> <var class="def-var-arguments">init_db_handle_type(void)</var><a class="copiable-link" href="#index-void-1"> &para;</a></span></dt>
 </dl>
 
 <p>Used to register static functions used to manage dbh SMOB.
 </p>
-<dl>
-<dt><a name="index-void-2"></a><u>Function:</u> <b>void</b><i> init_dbi(void)</i></dt>
+<dl class="first-deffn first-defun-alias-first-deffn">
+<dt class="deffn defun-alias-deffn" id="index-void-2"><span class="category-def">Function: </span><span><strong class="def-name">void</strong> <var class="def-var-arguments">init_dbi(void)</var><a class="copiable-link" href="#index-void-2"> &para;</a></span></dt>
 </dl>
 
 <p>Used to expose guile-dbi symbols so, scheme can call them.
 </p>
-<hr size="6">
-<a name="How-plugins-are-loaded"></a>
-<table cellpadding="1" cellspacing="1" border="0">
-<tr><td valign="middle" align="left">[<a href="#Internal-functions" title="Previous section in reading order"> &lt; </a>]</td>
-<td valign="middle" align="left">[<a href="#How-to-write-plugins" title="Next section in reading order"> &gt; </a>]</td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left">[<a href="#Internals-and-Database-Drivers" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
-<td valign="middle" align="left">[<a href="#Internals-and-Database-Drivers" title="Up section"> Up </a>]</td>
-<td valign="middle" align="left">[ &gt;&gt; ]</td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left">[<a href="#Top" title="Cover (top) of document">Top</a>]</td>
-<td valign="middle" align="left">[<a href="#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[Index]</td>
-<td valign="middle" align="left">[<a href="#SEC_About" title="About (help)"> ? </a>]</td>
-</tr></table>
-<a name="How-plugins-are-loaded-1"></a>
-<h2 class="section">4.3 How plugins are loaded</h2>
+<hr>
+</div>
+<div class="section-level-extent" id="How-plugins-are-loaded">
+<div class="nav-panel">
+<p>
+Next: <a href="#How-to-write-plugins" accesskey="n" rel="next">How to write plugins</a>, Previous: <a href="#Internal-functions" accesskey="p" rel="prev">Internal functions</a>, Up: <a href="#Internals-and-Database-Drivers" accesskey="u" rel="up">Internals and Database Drivers</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</p>
+</div>
+<h3 class="section" id="How-plugins-are-loaded-1"><span>4.3 How plugins are loaded<a class="copiable-link" href="#How-plugins-are-loaded-1"> &para;</a></span></h3>
 
-<p>Everything starts at <code>s_make_db_handle</code>. This function uses
+<p>Everything starts at <code class="code">s_make_db_handle</code>. This function uses
 libltdl to load a shared library named &ldquo;libguile-dbd-bcknd&rdquo; with the
 extension of &ldquo;.la&rdquo;, &ldquo;.so&rdquo;, etc. It&rsquo;s searched in the value of
-environment variable <code>GUILE_DBD_PATH</code> first, then libltdl&rsquo;s
+environment variable <code class="code">GUILE_DBD_PATH</code> first, then libltdl&rsquo;s
 search patch and system library search path. bcknd is the first param
 of dbi-open.
 </p>
@@ -660,38 +587,26 @@ of dbi-open.
 <p>If the shared library is successfully loaded, the dbh&rsquo;s field &ldquo;handle&rdquo;
 is filled with the pointer returned by &ldquo;lt_dlopen&rdquo; and dbh-&gt;status is
 set.  Otherwise the status is set to an error code in the car location,
-while cdr is filled with an error message returned by <code>strerror</code>.
+while cdr is filled with an error message returned by <code class="code">strerror</code>.
 </p>
 <br>
-<p>Once &ldquo;lt_dlopen&rdquo; is ok, <code>__gdbi_dbd_wrap</code> is used to call the backend
+<p>Once &ldquo;lt_dlopen&rdquo; is ok, <code class="code">__gdbi_dbd_wrap</code> is used to call the backend
 plugin connect function passing it the connection string. If this
 step also succeeds, then the db should be connected.
-<br>
-In every other dbi interface function, after type check,
-<code>__gdbi_dbd_wrap</code> is used to call dbd function. When close is
+</p><br>
+<p>In every other dbi interface function, after type check,
+<code class="code">__gdbi_dbd_wrap</code> is used to call dbd function. When close is
 called, after dbd close return, the reference to linked dbd is
 decremented until is 0.
 </p>
-<hr size="6">
-<a name="How-to-write-plugins"></a>
-<table cellpadding="1" cellspacing="1" border="0">
-<tr><td valign="middle" align="left">[<a href="#How-plugins-are-loaded" title="Previous section in reading order"> &lt; </a>]</td>
-<td valign="middle" align="left">[ &gt; ]</td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left">[<a href="#Internals-and-Database-Drivers" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
-<td valign="middle" align="left">[<a href="#Internals-and-Database-Drivers" title="Up section"> Up </a>]</td>
-<td valign="middle" align="left">[ &gt;&gt; ]</td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left">[<a href="#Top" title="Cover (top) of document">Top</a>]</td>
-<td valign="middle" align="left">[<a href="#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[Index]</td>
-<td valign="middle" align="left">[<a href="#SEC_About" title="About (help)"> ? </a>]</td>
-</tr></table>
-<a name="How-to-write-plugins-1"></a>
-<h2 class="section">4.4 How to write plugins</h2>
+<hr>
+</div>
+<div class="section-level-extent" id="How-to-write-plugins">
+<div class="nav-panel">
+<p>
+Previous: <a href="#How-plugins-are-loaded" accesskey="p" rel="prev">How plugins are loaded</a>, Up: <a href="#Internals-and-Database-Drivers" accesskey="u" rel="up">Internals and Database Drivers</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</p>
+</div>
+<h3 class="section" id="How-to-write-plugins-1"><span>4.4 How to write plugins<a class="copiable-link" href="#How-to-write-plugins-1"> &para;</a></span></h3>
 
 <p>Writing a plugin is fairly easy (have a look at the mysql, Postgres or
 sqlite dbd source code). You will need to supply a few functions with
@@ -700,10 +615,10 @@ appropriately chosen names.
 <br>
 <p>These are the functions and return types you should supply for
 a well written dbd:
-<br>
-</p>
-<dl>
-<dt><a name="index-void-3"></a><u>Function:</u> <b>void</b><i> __bcknd_make_g_db_handle(gdbi_db_handle_t* dbh)</i></dt>
+</p><br>
+
+<dl class="first-deffn first-defun-alias-first-deffn">
+<dt class="deffn defun-alias-deffn" id="index-void-3"><span class="category-def">Function: </span><span><strong class="def-name">void</strong> <var class="def-var-arguments">__bcknd_make_g_db_handle(gdbi_db_handle_t* dbh)</var><a class="copiable-link" href="#index-void-3"> &para;</a></span></dt>
 </dl>
 
 <p>The &ldquo;bcknd&rdquo; is the name used by the open function.
@@ -711,217 +626,85 @@ This function should parse the connection string
 and use params to connect to backend dbd database. Status should be
 set in dbh in order to return useful information. Don&rsquo;t forget
 to set dbh field &ldquo;closed&rdquo; to false if connection is correctly established.
-<br>
-</p>
-<dl>
-<dt><a name="index-void-4"></a><u>Function:</u> <b>void</b><i> __mysql_close_g_db_handle(gdbi_db_handle_t* dbh)</i></dt>
+</p><br>
+
+<dl class="first-deffn first-defun-alias-first-deffn">
+<dt class="deffn defun-alias-deffn" id="index-void-4"><span class="category-def">Function: </span><span><strong class="def-name">void</strong> <var class="def-var-arguments">__mysql_close_g_db_handle(gdbi_db_handle_t* dbh)</var><a class="copiable-link" href="#index-void-4"> &para;</a></span></dt>
 </dl>
 
 <p>Close the connection and perform any needed cleanup.
 Don&rsquo;t forget do set field &ldquo;closed&rdquo; to true if the connection
 was correctly closed.
 </p>
-<dl>
-<dt><a name="index-void-5"></a><u>Function:</u> <b>void</b><i> __mysql_query_g_db_handle(gdbi_db_handle_t* dbh, char* query)</i></dt>
+<dl class="first-deffn first-defun-alias-first-deffn">
+<dt class="deffn defun-alias-deffn" id="index-void-5"><span class="category-def">Function: </span><span><strong class="def-name">void</strong> <var class="def-var-arguments">__mysql_query_g_db_handle(gdbi_db_handle_t* dbh, char* query)</var><a class="copiable-link" href="#index-void-5"> &para;</a></span></dt>
 </dl>
 
 <p>This should run the query and set the status, but should not return
 any rows.  To return rows, the getrow function must be implemented.
-<br>
-</p>
-<dl>
-<dt><a name="index-void-6"></a><u>Function:</u> <b>void</b><i> __bcknd_params_query_g_db_handle(gdbi_db_handle_t* dbh, char* query, int argc, SCM* argv)</i></dt>
+</p><br>
+
+<dl class="first-deffn first-defun-alias-first-deffn">
+<dt class="deffn defun-alias-deffn" id="index-void-6"><span class="category-def">Function: </span><span><strong class="def-name">void</strong> <var class="def-var-arguments">__bcknd_params_query_g_db_handle(gdbi_db_handle_t* dbh, char* query, int argc, SCM* argv)</var><a class="copiable-link" href="#index-void-6"> &para;</a></span></dt>
 </dl>
 
-<p>Optional but recommended.  Prepare <var>query</var> as a parameterized
-statement, bind the <var>argc</var> Scheme values in <var>argv</var> to its
+<p>Optional but recommended.  Prepare <var class="var">query</var> as a parameterized
+statement, bind the <var class="var">argc</var> Scheme values in <var class="var">argv</var> to its
 placeholders, and execute it.  The placeholder syntax is
-backend-specific (<code>?</code> for SQLite3 and MySQL, <code>$N</code> for
+backend-specific (<code class="code">?</code> for SQLite3 and MySQL, <code class="code">$N</code> for
 PostgreSQL).
 </p>
 <p>Implementations must:
-</p><ul>
-<li> Verify that <code>argc</code> matches the number of placeholders in
-<var>query</var> and set an error status if not.
-</li><li> Map Scheme types to native bind types: boolean integer
+</p><ul class="itemize mark-bullet">
+<li>Verify that <code class="code">argc</code> matches the number of placeholders in
+<var class="var">query</var> and set an error status if not.
+</li><li>Map Scheme types to native bind types: boolean integer
 0/1 (or native boolean), exact integer 64-bit integer, inexact
 real double, string text, null list SQL NULL.
-</li><li> For statements that return rows (SELECT, RETURNING, &hellip;),
-leave the prepared statement ready for <code>dbi-get_row</code> to step
+</li><li>For statements that return rows (SELECT, RETURNING, &hellip;),
+leave the prepared statement ready for <code class="code">dbi-get_row</code> to step
 through.
-</li><li> For statements that produce no rows (DDL, DML without RETURNING),
+</li><li>For statements that produce no rows (DDL, DML without RETURNING),
 execute the statement fully and set status to success.
 </li></ul>
 
 <p>If this function is not implemented in the plugin, calling
-<code>dbi-params-query</code> from Scheme will not execute the query;
+<code class="code">dbi-params-query</code> from Scheme will not execute the query;
 instead, the status is set to an error (inspect with
-<code>dbi-get_status</code>) and no Scheme exception is raised.
-<br>
-</p>
-<dl>
-<dt><a name="index-SCM"></a><u>Function:</u> <b>SCM</b><i> __mysql_getrow_g_db_handle(gdbi_db_handle_t* dbh)</i></dt>
+<code class="code">dbi-get_status</code>) and no Scheme exception is raised.
+</p><br>
+
+<dl class="first-deffn first-defun-alias-first-deffn">
+<dt class="deffn defun-alias-deffn" id="index-SCM"><span class="category-def">Function: </span><span><strong class="def-name">SCM</strong> <var class="def-var-arguments">__mysql_getrow_g_db_handle(gdbi_db_handle_t* dbh)</var><a class="copiable-link" href="#index-SCM"> &para;</a></span></dt>
 </dl>
 
 <p>This function should return a single row from a previously executed
 query. It will typically be called more than once. When no more row
-are available a <code>#f</code> must be returned.
+are available a <code class="code">#f</code> must be returned.
 </p>
 <p>A returned row must be an association list, that is, a list of pairs
 whose car is the field name and cdr is it&rsquo;s value (if possible, the
 value should use the closest possible guile/scheme type).
 </p>
 <br>
+
+<p>Plugins are also expected to update the <code class="code">affected_rows</code> field of
+<code class="code">gdbi_db_handle_t</code> inside the query and params-query functions.
+Set <code class="code">dbh-&gt;affected_rows</code> to the number of rows changed by the
+statement (as reported by the backend&rsquo;s native API, e.g.
+<code class="code">mysql_affected_rows()</code>, <code class="code">sqlite3_changes()</code>, or
+<code class="code">atoll(PQcmdTuples(res))</code>).  For SELECT statements, set it to 0
+(or to the backend&rsquo;s natural sentinel, e.g. &minus;1 for MySQL).
+This value is exposed to Scheme via <code class="code">dbi-affected-rows</code>.
+</p>
+<br>
 <br>
 <p>That&rsquo;s all, for any other questions see the source code :)
-</p><hr size="6">
-<a name="SEC_Contents"></a>
-<table cellpadding="1" cellspacing="1" border="0">
-<tr><td valign="middle" align="left">[<a href="#Top" title="Cover (top) of document">Top</a>]</td>
-<td valign="middle" align="left">[<a href="#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[Index]</td>
-<td valign="middle" align="left">[<a href="#SEC_About" title="About (help)"> ? </a>]</td>
-</tr></table>
-<h1>Table of Contents</h1>
-<div class="contents">
-
-<ul class="toc">
-  <li><a name="toc-Introduction-1" href="#Introduction">1. Introduction</a>
-  <ul class="toc">
-    <li><a name="toc-History" href="#History">1.1 History</a></li>
-    <li><a name="toc-Getting-Guile-DBI" href="#Getting-Guile-DBI">1.2 Getting Guile DBI</a></li>
-  </ul></li>
-  <li><a name="toc-Tutorial-1" href="#Tutorial">2. Tutorial</a></li>
-  <li><a name="toc-Reference-1" href="#Reference">3. Reference</a>
-  <ul class="toc">
-    <li><a name="toc-Functions" href="#Functions">3.1 Functions</a></li>
-  </ul></li>
-  <li><a name="toc-Internals-and-Database-Drivers-1" href="#Internals-and-Database-Drivers">4. Internals and Database Drivers</a>
-  <ul class="toc">
-    <li><a name="toc-Internal-structures-1" href="#Internal-structures">4.1 Internal structures</a></li>
-    <li><a name="toc-Internal-functions-1" href="#Internal-functions">4.2 Internal functions</a></li>
-    <li><a name="toc-How-plugins-are-loaded-1" href="#How-plugins-are-loaded">4.3 How plugins are loaded</a></li>
-    <li><a name="toc-How-to-write-plugins-1" href="#How-to-write-plugins">4.4 How to write plugins</a></li>
-  </ul>
-</li>
-</ul>
+</p></div>
 </div>
-<hr size="1">
-<a name="SEC_About"></a>
-<table cellpadding="1" cellspacing="1" border="0">
-<tr><td valign="middle" align="left">[<a href="#Top" title="Cover (top) of document">Top</a>]</td>
-<td valign="middle" align="left">[<a href="#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[Index]</td>
-<td valign="middle" align="left">[<a href="#SEC_About" title="About (help)"> ? </a>]</td>
-</tr></table>
-<h1>About This Document</h1>
-<p>
-  This document was generated on <i>May 4, 2026</i> using <a href="http://www.nongnu.org/texi2html/"><i>texi2html 1.82</i></a>.
-</p>
-<p>
-  The buttons in the navigation panels have the following meaning:
-</p>
-<table border="1">
-  <tr>
-    <th> Button </th>
-    <th> Name </th>
-    <th> Go to </th>
-    <th> From 1.2.3 go to</th>
-  </tr>
-  <tr>
-    <td align="center"> [ &lt; ] </td>
-    <td align="center">Back</td>
-    <td>Previous section in reading order</td>
-    <td>1.2.2</td>
-  </tr>
-  <tr>
-    <td align="center"> [ &gt; ] </td>
-    <td align="center">Forward</td>
-    <td>Next section in reading order</td>
-    <td>1.2.4</td>
-  </tr>
-  <tr>
-    <td align="center"> [ &lt;&lt; ] </td>
-    <td align="center">FastBack</td>
-    <td>Beginning of this chapter or previous chapter</td>
-    <td>1</td>
-  </tr>
-  <tr>
-    <td align="center"> [ Up ] </td>
-    <td align="center">Up</td>
-    <td>Up section</td>
-    <td>1.2</td>
-  </tr>
-  <tr>
-    <td align="center"> [ &gt;&gt; ] </td>
-    <td align="center">FastForward</td>
-    <td>Next chapter</td>
-    <td>2</td>
-  </tr>
-  <tr>
-    <td align="center"> [Top] </td>
-    <td align="center">Top</td>
-    <td>Cover (top) of document</td>
-    <td> &nbsp; </td>
-  </tr>
-  <tr>
-    <td align="center"> [Contents] </td>
-    <td align="center">Contents</td>
-    <td>Table of contents</td>
-    <td> &nbsp; </td>
-  </tr>
-  <tr>
-    <td align="center"> [Index] </td>
-    <td align="center">Index</td>
-    <td>Index</td>
-    <td> &nbsp; </td>
-  </tr>
-  <tr>
-    <td align="center"> [ ? ] </td>
-    <td align="center">About</td>
-    <td>About (help)</td>
-    <td> &nbsp; </td>
-  </tr>
-</table>
+</div>
 
-<p>
-  where the <strong> Example </strong> assumes that the current position is at <strong> Subsubsection One-Two-Three </strong> of a document of the following structure:
-</p>
 
-<ul>
-  <li> 1. Section One
-    <ul>
-      <li>1.1 Subsection One-One
-        <ul>
-          <li>...</li>
-        </ul>
-      </li>
-      <li>1.2 Subsection One-Two
-        <ul>
-          <li>1.2.1 Subsubsection One-Two-One</li>
-          <li>1.2.2 Subsubsection One-Two-Two</li>
-          <li>1.2.3 Subsubsection One-Two-Three &nbsp; &nbsp;
-            <strong>&lt;== Current Position </strong></li>
-          <li>1.2.4 Subsubsection One-Two-Four</li>
-        </ul>
-      </li>
-      <li>1.3 Subsection One-Three
-        <ul>
-          <li>...</li>
-        </ul>
-      </li>
-      <li>1.4 Subsection One-Four</li>
-    </ul>
-  </li>
-</ul>
 
-<hr size="1">
-<p>
- <font size="-1">
-  This document was generated on <i>May 4, 2026</i> using <a href="http://www.nongnu.org/texi2html/"><i>texi2html 1.82</i></a>.
- </font>
- <br>
-
-</p>
 </body>
 </html>
